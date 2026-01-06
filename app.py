@@ -7,7 +7,7 @@ import fitz  # PyMuPDF
 import re
 import tempfile
 import json
-import requests # Stabilne pobieranie
+import requests # Do stabilnego pobierania dużych plików
 
 # --- 1. LOGOWANIE ---
 if "auth" not in st.session_state:
@@ -24,7 +24,7 @@ if not st.session_state["auth"]:
             st.error("Błędne hasło!")
     st.stop()
 
-# --- 2. KONFIGURACJA I HISTORIA ---
+# --- 2. KONFIGURACJA I TRWAŁA HISTORIA ---
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 g = Github(st.secrets["GITHUB_TOKEN"])
 repo = g.get_repo("marzenazielinska0503-byte/moje_notatki")
@@ -74,33 +74,40 @@ def get_premium_audio(text, voice, speed):
         return res.content
     except: return None
 
-# --- 3. PANEL BOCZNY ---
+# --- 3. PANEL BOCZNY (ZARZĄDZANIE) ---
 with st.sidebar:
     st.title("📂 Zarządzanie")
     
+    # SEKCJA: NOWY PRZEDMIOT
     st.subheader("🆕 Nowy przedmiot")
     new_sub = st.text_input("Nazwa (np. Psychologia):")
-    if st.button("Dodaj folder"):
+    if st.button("Utwórz przedmiot"):
         if new_sub:
             repo.create_file(f"baza_wiedzy/{new_sub}/.keep", "init", "")
             st.success("Dodano!")
             st.rerun()
     st.markdown("---")
 
-    st.subheader("📜 Archiwum nauki")
+    # POPRAWIONA HISTORIA W SIDEBARZE (Naprawa NameError)
+    st.subheader("📜 Archiwum pytań")
     if st.session_state.messages:
         for i in range(len(st.session_state.messages)-1, 0, -1):
             msg = st.session_state.messages[i]
             if msg["role"] == "assistant":
                 user_q = st.session_state.messages[i-1]
                 with st.expander(f"💬 {user_q['content'][:25]}..."):
-                    st.write(f"**P:** {user_msg['content']}")
+                    st.write(f"**P:** {user_q['content']}")
                     st.write(f"**O:** {msg['content']}")
 
+    if st.button("🗑️ Wyczyść historię"):
+        st.session_state.messages = []
+        save_history_to_github([])
+        st.rerun()
+
     st.markdown("---")
-    st.subheader("🎙️ Ustawienia głosu")
-    v_voice = st.selectbox("Lektor:", ["nova", "shimmer", "alloy", "onyx"])
-    v_speed = st.slider("Szybkość:", 0.5, 2.0, 1.0, 0.1)
+    st.subheader("🎙️ Lektor")
+    v_voice = st.selectbox("Głos:", ["nova", "shimmer", "alloy", "onyx"])
+    v_speed = st.slider("Szybkość czytania:", 0.5, 2.0, 1.0, 0.1)
     
     st.markdown("---")
     cats = [c.name for c in repo.get_contents("baza_wiedzy") if c.type == "dir"]
@@ -114,8 +121,8 @@ with st.sidebar:
             current_pdf_bytes = fetch_pdf_bytes(f"baza_wiedzy/{selected_cat}/{selected_file}")
             text_map = get_pdf_text_map(current_pdf_bytes)
             
-        up_new = st.file_uploader("Dodaj PDF do kategorii", type=['pdf'])
-        if up_new and st.button("Wyślij plik"):
+        up_new = st.file_uploader("Dodaj PDF do tej kategorii", type=['pdf'])
+        if up_new and st.button("Wyślij do bazy"):
             repo.create_file(f"baza_wiedzy/{selected_cat}/{up_new.name}", "add", up_new.getvalue())
             st.success("Zapisano!")
 
@@ -124,22 +131,22 @@ st.title("🧠 Inteligentna nauka")
 col1, col2 = st.columns([1, 1.2])
 
 with col1:
-    st.subheader("💬 Czat edukacyjny")
-    chat_box = st.container(height=400)
-    with chat_box:
+    st.subheader("💬 Czat (Pytanie po pytaniu)")
+    chat_disp = st.container(height=400)
+    with chat_disp:
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]):
                 st.write(msg["content"])
                 if "source_text" in msg and msg["source_text"]:
-                    with st.expander("📖 Zobacz tekst źródłowy"):
+                    with st.expander("📖 Zobacz treść źródłową"):
                         st.write(msg["source_text"])
 
     pasted_img = st.file_uploader("Wklej obraz (Ctrl+V):", type=['png', 'jpg', 'jpeg'])
-    audio_q = st.audio_input("🎤 Pytanie głosem:")
-    text_q = st.chat_input("Zadaj pytanie...")
+    audio_q = st.audio_input("🎤 Zadaj pytanie głosem:")
+    text_q = st.chat_input("Zadaj pytanie tekstowe...")
     
     if st.button("🚀 Wyślij do AI") or text_q:
-        with st.spinner("Analizuję..."):
+        with st.spinner("Analiza..."):
             v_text = ""
             if audio_q:
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
@@ -149,16 +156,9 @@ with col1:
             final_q = text_q if text_q else (v_text if v_text else "Rozwiąż zadanie ze zdjęcia.")
             ctx_text = "\n".join([f"[ID:{i}]: {t}" for i, t in text_map.items() if t])
             
-            # --- POPRAWIONY SYSTEM PROMPT (Krótka odpowiedź + Opis) ---
-            system_instruction = (
-                "Jesteś ekspertem. Przy pytaniach testowych NA SAMEJ GÓRZE podaj krótką odpowiedź (np. 'Odpowiedź: A'). "
-                "Poniżej dodaj nagłówek 'Wyjaśnienie:' i opisz dlaczego ta odpowiedź jest poprawna. "
-                "IGNORUJ kolory zaznaczeń na zdjęciach. Zawsze na końcu dodaj [ID:X]."
-            )
-
-            msgs = [{"role": "system", "content": system_instruction},
-                    {"role": "user", "content": [{"type": "text", "text": f"NOTATKI: {ctx_text[:12000]}\n\nPYTANIE: {final_q}"}]}]
-            
+            # --- FORMAT ODPOWIEDZI: KRÓTKA + WYJAŚNIENIE ---
+            msgs = [{"role": "system", "content": "Przy testach podaj krótki wynik na górze, a poniżej nagłówek 'Wyjaśnienie:'. IGNORUJ kolory na zdjęciach. Zawsze dodaj [ID:X]."},
+                    {"role": "user", "content": [{"type": "text", "text": f"NOTATKI: {ctx_text[:12000]}\n\nZADANIE: {final_q}"}]}]
             if pasted_img:
                 b64 = base64.b64encode(pasted_img.getvalue()).decode()
                 msgs[1]["content"].append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
