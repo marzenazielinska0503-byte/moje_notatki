@@ -94,5 +94,13 @@
   {
     "role": "assistant",
     "content": "Obraz przedstawia tekst informacyjny dotyczący trzech grup przyczyn niepowodzeń szkolnych. Wymienia on autorów, którzy się nimi zajmowali, z wyraźnym wyróżnieniem jednego z nich, co sugeruje, że może on być kluczowy dla omawianego zagadnienia. \n\nPrzyczyny te są podzielone na kilka kategorii: społeczno-ekonomiczne, biopsychiczne i szkolne. Tekst wygląda na fragment publikacji dotyczącej edukacji lub psychologii.\n\n[ID:X]"
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Obraz przedstawia pytanie dotyczące trzech grup przyczyn niepowodzeń szkolnych, które zostały wyróżnione przez różnych autorów. Autor, który jest wyróżniony kolorem zielonym, to B. T. Lewowicki. Pozostali autorzy to A. J. Konopnicki, F. Herbart oraz A. Nowakowski."
   }
 ]
