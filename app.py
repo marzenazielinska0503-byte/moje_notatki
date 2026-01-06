@@ -33,6 +33,7 @@ st.set_page_config(page_title="Inteligentna nauka", layout="wide")
 # Inicjalizacja stanów
 if "pdf_page" not in st.session_state: st.session_state.pdf_page = 0
 if "highlight_text" not in st.session_state: st.session_state.highlight_text = ""
+if "last_file" not in st.session_state: st.session_state.last_file = ""
 
 # --- 3. FUNKCJE Z OPTYMALIZACJĄ ---
 
@@ -41,21 +42,24 @@ def fetch_pdf_from_github(path):
     return repo.get_contents(path).decoded_content
 
 def render_page_with_marker(pdf_bytes, page_num, search_text=""):
-    """Renderuje stronę i zaznacza tekst na czerwono jeśli go znajdzie"""
+    """Renderuje stronę i zaznacza tekst"""
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     page = doc.load_page(page_num)
-    
     if search_text:
-        # Szukanie współrzędnych tekstu na stronie
         text_instances = page.search_for(search_text)
         for inst in text_instances:
-            # Rysujemy czerwoną ramkę wokół źródła
             page.add_rect_annot(inst).set_colors(stroke=(1, 0, 0)) 
-    
     pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
     img_bytes = pix.tobytes("png")
     doc.close()
     return img_bytes
+
+def get_page_text(pdf_bytes, page_num):
+    """Wyciąga tekst z konkretnej strony"""
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    text = doc[page_num].get_text()
+    doc.close()
+    return text
 
 def get_full_context_with_pages(pdf_bytes):
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
@@ -66,12 +70,11 @@ def get_full_context_with_pages(pdf_bytes):
     return context
 
 def analyze_and_locate(user_query, text_context):
-    """AI znajduje odpowiedź, stronę i konkretny cytat"""
+    """AI znajduje odpowiedź, stronę i cytat"""
     system_prompt = (
-        "Odpowiadaj na podstawie notatek. Na końcu odpowiedzi DODAJ DOKŁADNIE TEN FORMAT: "
-        "STRONA:X | CYTAT: 'fragment tekstu z notatek'. Gdzie X to numer strony (liczony od 0)."
+        "Odpowiadaj na podstawie notatek. Na końcu odpowiedzi ZAWSZE podaj źródło: "
+        "STRONA:X | CYTAT: 'fragment'. X to numer strony (od 0)."
     )
-    
     response = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[{"role": "system", "content": system_prompt},
@@ -99,6 +102,10 @@ with st.sidebar:
         selected_file = st.selectbox("Plik:", ["Brak"] + files)
         
         if selected_file != "Brak":
+            if st.session_state.last_file != selected_file:
+                st.session_state.pdf_page = 0
+                st.session_state.last_file = selected_file
+            
             current_pdf_bytes = fetch_pdf_from_github(f"baza_wiedzy/{selected_cat}/{selected_file}")
             full_library_text = get_full_context_with_pages(current_pdf_bytes)
 
@@ -114,65 +121,74 @@ st.title("🧠 Inteligentna nauka")
 col1, col2 = st.columns([1, 1.3])
 
 with col1:
-    st.subheader("❓ Pytanie")
+    st.subheader("❓ Pytanie do AI")
     pasted_img = st.file_uploader("Zrzut (Ctrl+V):", type=['png', 'jpg', 'jpeg'])
-    q = st.text_input("Wpisz o co chcesz zapytać:")
+    q = st.text_input("Twoje pytanie (AI samo znajdzie stronę):")
 
-    if st.button("Zapytaj AI") or (pasted_img and not q):
-        with st.spinner("Przeszukuję dokumenty..."):
+    if st.button("Zapytaj AI") or (pasted_img and q):
+        with st.spinner("Szukam odpowiedzi i strony..."):
             raw_res = analyze_and_locate(q if q else "Przeanalizuj to", full_library_text)
             
-            # Ekstrakcja strony i cytatu
+            # Autostronicowanie na podstawie odpowiedzi AI
             try:
                 page_match = re.search(r"STRONA:(\d+)", raw_res)
                 quote_match = re.search(r"CYTAT: '(.*?)'", raw_res)
+                if page_match: st.session_state.pdf_page = int(page_match.group(1))
+                if quote_match: st.session_state.highlight_text = quote_match.group(1)
                 
-                if page_match:
-                    st.session_state.pdf_page = int(page_match.group(1))
-                if quote_match:
-                    st.session_state.highlight_text = quote_match.group(1)
-                
-                # Usuwamy tagi z widocznej odpowiedzi dla użytkownika
                 clean_res = re.sub(r"STRONA:\d+ \| CYTAT: '.*?'", "", raw_res)
-                st.info(clean_res)
+                st.info(f"📍 Źródło: Strona {st.session_state.pdf_page + 1}\n\n{clean_res}")
                 
-                tts = gTTS(text=clean_res, lang='pl')
-                tts.save("ans.mp3")
+                gTTS(text=clean_res, lang='pl').save("ans.mp3")
                 st.audio("ans.mp3", autoplay=True)
-            except:
-                st.info(raw_res)
+            except: st.info(raw_res)
 
 with col2:
     if current_pdf_bytes:
-        st.subheader(f"📖 Podgląd: strona {st.session_state.pdf_page + 1}")
-        
-        # Nawigacja
-        c1, c2, c3 = st.columns([1, 2, 1])
-        with c1: 
-            if st.button("⬅️"): st.session_state.pdf_page -= 1; st.rerun()
-        with c2:
-            st.session_state.pdf_page = st.slider("Strona:", 0, 100, st.session_state.pdf_page)
-        with c3:
-            if st.button("➡️"): st.session_state.pdf_page += 1; st.rerun()
+        doc_temp = fitz.open(stream=current_pdf_bytes, filetype="pdf")
+        max_p = len(doc_temp)
+        doc_temp.close()
 
-        # Wyświetlanie z Markerem
+        st.subheader(f"📖 Podgląd: Strona {st.session_state.pdf_page + 1} z {max_p}")
+        
+        # NAWIGACJA GŁOSOWA I STRONICOWANIE
+        c1, c2, c3 = st.columns([1, 1, 1])
+        with c1:
+            if st.button("⬅️ Poprzednia"): st.session_state.pdf_page -= 1; st.rerun()
+        with c2:
+            # NOWOŚĆ: TRYB AUDIOBOOKA (Auto-stronicowanie)
+            if st.button("▶️ Czytaj i przejdź dalej"):
+                txt = get_page_text(current_pdf_bytes, st.session_state.pdf_page)
+                if txt.strip():
+                    with st.spinner("Czytam stronę..."):
+                        gTTS(text=txt, lang='pl').save("audiobook.mp3")
+                        st.audio("audiobook.mp3", autoplay=True)
+                        # Przełączamy na następną stronę, aby widok się zmienił
+                        if st.session_state.pdf_page < max_p - 1:
+                            st.session_state.pdf_page += 1
+                else:
+                    st.warning("Strona bez tekstu, skaczę dalej.")
+                    if st.session_state.pdf_page < max_p - 1:
+                        st.session_state.pdf_page += 1
+                        st.rerun()
+        with c3:
+            if st.button("Następna ➡️"): st.session_state.pdf_page += 1; st.rerun()
+
+        # Wyświetlanie strony z Markerem
         img = render_page_with_marker(current_pdf_bytes, st.session_state.pdf_page, st.session_state.highlight_text)
         st.image(img, use_container_width=True)
         
-        # NOTATNIK POD PDF
+        # NOTATNIK
         st.markdown("---")
         notes_path = f"baza_wiedzy/{selected_cat}/{selected_file.replace('.pdf', '')}_notatki.txt"
-        try:
-            saved_notes = repo.get_contents(notes_path).decoded_content.decode()
+        try: saved_notes = repo.get_contents(notes_path).decoded_content.decode()
         except: saved_notes = ""
-        
-        user_notes = st.text_area("📝 Twoje notatki do tego dokumentu:", value=saved_notes, height=150)
-        if st.button("💾 Zapisz moje notatki"):
+        user_notes = st.text_area("📝 Notatki do tej strony:", value=saved_notes, height=150)
+        if st.button("💾 Zapisz notatki"):
             try:
                 old = repo.get_contents(notes_path)
                 repo.update_file(notes_path, "update", user_notes, old.sha)
-            except:
-                repo.create_file(notes_path, "create", user_notes)
-            st.success("Notatki zapisane na GitHubie!")
+            except: repo.create_file(notes_path, "create", user_notes)
+            st.success("Zapisano!")
     else:
         st.info("Wybierz plik z biblioteki.")
