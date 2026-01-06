@@ -16,5 +16,14 @@
     "role": "assistant",
     "content": "Psychologia to nauka zajmująca się badaniem zachowań ludzi i procesów psychicznych, takich jak emocje, myśli i motywacje.",
     "source_info": "To jest skan PDF – brak tekstu do wyświetlenia (AI przeanalizowało stronę wizualnie)."
+  },
+  {
+    "role": "user",
+    "content": "Co to jest nauczanie?"
+  },
+  {
+    "role": "assistant",
+    "content": "Nauczanie to proces przekazywania wiedzy i umiejętności, który odbywa się poprzez różne metody dydaktyczne.",
+    "source_info": "To jest skan PDF – brak tekstu do wyświetlenia (AI przeanalizowało stronę wizualnie)."
   }
 ]
