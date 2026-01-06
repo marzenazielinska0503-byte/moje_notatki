@@ -6,6 +6,7 @@ import base64
 import fitz  # PyMuPDF
 import re
 import tempfile
+import json
 
 # --- 1. LOGOWANIE ---
 if "auth" not in st.session_state:
@@ -22,15 +23,32 @@ if not st.session_state["auth"]:
             st.error("Błędne hasło!")
     st.stop()
 
-# --- 2. KONFIGURACJA, CACHE I HISTORIA ---
+# --- 2. KONFIGURACJA I TRWAŁA HISTORIA ---
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 g = Github(st.secrets["GITHUB_TOKEN"])
 repo = g.get_repo("marzenazielinska0503-byte/moje_notatki")
 st.set_page_config(page_title="Inteligentna nauka", layout="wide")
 
-# Inicjalizacja historii i stanów
+# Funkcje do obsługi trwałej historii na GitHubie
+def save_history_to_github(history):
+    path = "ustawienia/historia_czatu.json"
+    content = json.dumps(history, ensure_ascii=False, indent=2)
+    try:
+        old_file = repo.get_contents(path)
+        repo.update_file(path, "Update chat history", content, old_file.sha)
+    except:
+        repo.create_file(path, "Create chat history", content)
+
+def load_history_from_github():
+    try:
+        content = repo.get_contents("ustawienia/historia_czatu.json").decoded_content
+        return json.loads(content)
+    except:
+        return []
+
+# Inicjalizacja stanów
 if "messages" not in st.session_state:
-    st.session_state.messages = []
+    st.session_state.messages = load_history_from_github()
 if "pdf_page" not in st.session_state: st.session_state.pdf_page = 0
 if "last_file" not in st.session_state: st.session_state.last_file = ""
 
@@ -45,120 +63,113 @@ def get_pdf_text_map(pdf_bytes):
     doc.close()
     return text_map
 
-def get_premium_audio(text, voice):
+def get_premium_audio(text, voice, speed):
+    """Lektor OpenAI z regulacją szybkości"""
     try:
-        res = client.audio.speech.create(model="tts-1", voice=voice, input=text[:4000])
+        res = client.audio.speech.create(
+            model="tts-1", 
+            voice=voice, 
+            input=text[:4000],
+            speed=speed # Nowy parametr szybkości
+        )
         return res.content
     except: return None
 
-# --- 3. PANEL BOCZNY ---
+# --- 3. PANEL BOCZNY (HISTORIA I USTAWIENIA) ---
 with st.sidebar:
-    st.title("📂 Biblioteka")
-    selected_voice = st.selectbox("🎙️ Lektor:", ["nova", "shimmer", "alloy", "onyx"])
+    st.title("📂 Zarządzanie")
     
-    if st.button("🗑️ Wyczyść historię pytań"):
+    # SEKCJA HISTORII
+    st.subheader("📜 Historia pytań")
+    if st.session_state.messages:
+        for m in reversed(st.session_state.messages):
+            if m["role"] == "user":
+                st.caption(f"🗨️ {m['content'][:30]}...")
+    
+    if st.button("🗑️ Wyczyść wszystko"):
         st.session_state.messages = []
+        save_history_to_github([])
         st.rerun()
 
     st.markdown("---")
+    
+    # USTAWIENIA LEKTORA
+    st.subheader("🎙️ Lektor")
+    selected_voice = st.selectbox("Głos:", ["nova", "shimmer", "alloy", "onyx"])
+    voice_speed = st.slider("Szybkość czytania:", 0.5, 2.0, 1.0, 0.1)
+    
+    st.markdown("---")
+    
+    # DODAWANIE DOKUMENTÓW
+    st.subheader("📤 Dodaj do bazy")
     cats = [c.name for c in repo.get_contents("baza_wiedzy") if c.type == "dir"]
-    selected_cat = st.selectbox("Przedmiot:", ["---"] + cats)
+    target_cat = st.selectbox("Wybierz przedmiot:", cats)
+    up_file = st.file_uploader("Wgraj nowy PDF", type=['pdf'])
+    if up_file and st.button("Zapisz plik"):
+        repo.create_file(f"baza_wiedzy/{target_cat}/{up_file.name}", "Add doc", up_file.getvalue())
+        st.success("Plik dodany!")
+        st.rerun()
+
+    st.markdown("---")
+    selected_file_cat = st.selectbox("Otwórz przedmiot:", ["---"] + cats)
     
     current_pdf_bytes, selected_file, text_map = None, "Brak", {}
-    
-    if selected_cat != "---":
-        files = [c.name for c in repo.get_contents(f"baza_wiedzy/{selected_cat}") if c.name.endswith('.pdf')]
-        selected_file = st.selectbox("Plik:", ["Brak"] + files)
-        
+    if selected_file_cat != "---":
+        files = [c.name for c in repo.get_contents(f"baza_wiedzy/{selected_file_cat}") if c.name.endswith('.pdf')]
+        selected_file = st.selectbox("Wybierz plik:", ["Brak"] + files)
         if selected_file != "Brak":
-            if st.session_state.last_file != selected_file:
-                st.session_state.pdf_page = 0
-                st.session_state.last_file = selected_file
-            
-            current_pdf_bytes = fetch_pdf_bytes(f"baza_wiedzy/{selected_cat}/{selected_file}")
+            current_pdf_bytes = fetch_pdf_bytes(f"baza_wiedzy/{selected_file_cat}/{selected_file}")
             text_map = get_pdf_text_map(current_pdf_bytes)
 
-# --- 4. GŁÓWNY UKŁAD ---
+# --- 4. GŁÓWNY EKRAN ---
 st.title("🧠 Inteligentna nauka")
 col1, col2 = st.columns([1, 1.3])
 
 with col1:
-    st.subheader("💬 Rozmowa z AI")
+    st.subheader("💬 Rozmowa")
     
-    # Wyświetlanie historii
-    chat_container = st.container(height=500)
-    with chat_container:
+    # Okno czatu z historią
+    chat_box = st.container(height=400)
+    with chat_box:
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]):
                 st.write(msg["content"])
-                if "image" in msg:
-                    st.image(msg["image"], width=200)
-                if "source" in msg and msg["source"]:
-                    with st.expander("📖 Źródło z notatek"):
-                        st.write(msg["source"])
 
-    st.markdown("---")
-    st.write("➕ **Zadaj nowe pytanie:**")
-    
-    # Formy wejściowe
-    pasted_img = st.file_uploader("Wklej obrazek (Ctrl+V):", type=['png', 'jpg', 'jpeg'], key="chat_up")
-    audio_data = st.audio_input("🎤 Nagraj pytanie:")
-    text_q = st.text_input("Lub wpisz pytanie:")
+    # Wejście danych
+    pasted_img = st.file_uploader("Obrazek (Ctrl+V):", type=['png', 'jpg', 'jpeg'], key="main_up")
+    text_q = st.chat_input("Zadaj pytanie...")
 
-    # Przetwarzanie
-    if st.button("Wyślij do AI"):
-        voice_text = ""
-        if audio_data:
-            with st.spinner("Rozpoznawanie głosu..."):
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
-                    f.write(audio_data.getvalue())
-                    f_path = f.name
-                with open(f_path, "rb") as af:
-                    voice_text = client.audio.transcriptions.create(model="whisper-1", file=af).text
-                os.remove(f_path)
+    if text_q or pasted_img:
+        with st.spinner("Pracuję..."):
+            context = "\n".join([f"[ID:{i}]: {t}" for i, t in text_map.items() if t])
+            
+            content_list = [{"type": "text", "text": f"KONTEKST: {context[:12000]}\n\nPYTANIE: {text_q if text_q else 'Przeanalizuj obraz'}"}]
+            if pasted_img:
+                b64 = base64.b64encode(pasted_img.getvalue()).decode()
+                content_list.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
 
-        final_q = text_q if text_q else voice_text
-        if not final_q and pasted_img: final_q = "Przeanalizuj to zdjęcie."
-        
-        if final_q or pasted_img:
-            with st.spinner("AI myśli..."):
-                context = "\n".join([f"[ID:{i}]: {t}" for i, t in text_map.items() if t])
-                
-                content_list = [{"type": "text", "text": f"NOTATKI: {context[:12000]}\n\nZADANIE: {final_q}"}]
-                if pasted_img:
-                    b64 = base64.b64encode(pasted_img.getvalue()).decode()
-                    content_list.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
+            res_raw = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "Odpowiadaj krótko. Na końcu dodaj [ID:X]."},
+                    {"role": "user", "content": content_list}
+                ]
+            ).choices[0].message.content
 
-                res_raw = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "Odpowiadaj konkretnie i krótko. Na końcu dodaj [ID:X] strony."},
-                        {"role": "user", "content": content_list}
-                    ]
-                ).choices[0].message.content
-
-                # Ekstrakcja strony i czyszczenie
-                m = re.search(r"\[ID:(\d+)\]", res_raw)
-                source_p = int(m.group(1)) if m else st.session_state.pdf_page
-                if m: st.session_state.pdf_page = source_p
-                
-                clean_res = re.sub(r"\[ID:\d+\]", "", res_raw).strip()
-                
-                # Zapis do historii
-                new_msg = {"role": "user", "content": final_q if final_q else "Obrazek"}
-                if pasted_img: new_msg["image"] = pasted_img.getvalue()
-                st.session_state.messages.append(new_msg)
-                
-                st.session_state.messages.append({
-                    "role": "assistant", 
-                    "content": clean_res,
-                    "source": text_map.get(source_p, "Brak tekstu na tej stronie.")
-                })
-                
-                # Lektor dla nowej odpowiedzi
-                audio = get_premium_audio(clean_res, selected_voice)
-                if audio: st.audio(audio, autoplay=True)
-                st.rerun()
+            # Skok do strony i zapis
+            m = re.search(r"\[ID:(\d+)\]", res_raw)
+            if m: st.session_state.pdf_page = int(m.group(1))
+            
+            clean_res = re.sub(r"\[ID:\d+\]", "", res_raw).strip()
+            
+            st.session_state.messages.append({"role": "user", "content": text_q if text_q else "Pytanie obrazkowe"})
+            st.session_state.messages.append({"role": "assistant", "content": clean_res})
+            
+            save_history_to_github(st.session_state.messages) # Trwały zapis
+            
+            audio = get_premium_audio(clean_res, selected_voice, voice_speed)
+            if audio: st.audio(audio, autoplay=True)
+            st.rerun()
 
 with col2:
     if current_pdf_bytes:
@@ -169,10 +180,10 @@ with col2:
             if st.button("⬅️") and st.session_state.pdf_page > 0:
                 st.session_state.pdf_page -= 1; st.rerun()
         with c2:
-            if st.button("▶️ Czytaj stronę"):
+            if st.button("▶️ Czytaj"):
                 t = text_map.get(st.session_state.pdf_page, "")
                 if t.strip():
-                    st.audio(get_premium_audio(t, selected_voice), autoplay=True)
+                    st.audio(get_premium_audio(t, selected_voice, voice_speed), autoplay=True)
         with c3:
             if st.button("➡️") and st.session_state.pdf_page < len(text_map) - 1:
                 st.session_state.pdf_page += 1; st.rerun()
@@ -181,5 +192,3 @@ with col2:
         pix = doc[st.session_state.pdf_page].get_pixmap(matrix=fitz.Matrix(1.5, 1.5))
         st.image(pix.tobytes("png"), use_container_width=True)
         doc.close()
-    else:
-        st.info("Wybierz plik z biblioteki.")
