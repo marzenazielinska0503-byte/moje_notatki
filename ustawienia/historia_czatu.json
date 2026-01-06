@@ -54,5 +54,13 @@
   {
     "role": "assistant",
     "content": "Obraz przedstawia tekst dotyczący motywacji w kontekście rywalizacji uczniów w klasie. Zawiera dwie kategorie: \"Wewnętrznej\" oraz \"Zewnętrznej\", z zaznaczeniem, że rywalizacja jest rodzajem motywacji zewnętrznej. To sugeruje, że uczniowie mogą być motywowani nie tylko przez chęć osiągnięcia osobistych celów, ale również przez konkurencję z innymi."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Na obrazie przedstawiono tezę, iż rywalizacja uczniów w klasie jest rodzajem motywacji zewnętrznej. To stwierdzenie sugeruje, że uczniowie są motywowani do działania przez porównania z innymi, a nie przez wewnętrzne pragnienie osiągnięcia osobistych celów. Dwa typy motywacji, wewnętrzna i zewnętrzna, różnią się w swoim źródle: motywacja wewnętrzna pochodzi z samego ucznia, natomiast zewnętrzna angażuje czynniki zewnętrzne, takie jak rywalizacja."
   }
 ]
