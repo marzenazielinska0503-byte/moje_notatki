@@ -6,5 +6,13 @@
   {
     "role": "assistant",
     "content": "Na podstawie opisu, który widzę, pytanie dotyczy wykonania czynności na podstawie obserwacji działań i zachowań innych osób. Odpowiedzią na to pytanie jest \"Naśladownictwo\". \n\nNaśladownictwo to proces, w którym jednostka wykonuje działanie, które wcześniej zaobserwowała u innych."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Opis przedstawia definicję naśladownictwa, które polega na wykonywaniu działań i zachowań po obserwacji innych. Wskazuje, że jest to proces występujący zarówno u zwierząt, jak i u ludzi, przez całe życie. Naśladownictwo odgrywa istotną rolę w edukacji i rozwoju jednostki."
   }
 ]
