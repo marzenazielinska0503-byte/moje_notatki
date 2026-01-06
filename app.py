@@ -23,148 +23,134 @@ if not st.session_state["auth"]:
             st.error("Błędne hasło!")
     st.stop()
 
-# --- 2. KONFIGURACJA ---
+# --- 2. KONFIGURACJA I CACHE ---
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 g = Github(st.secrets["GITHUB_TOKEN"])
 repo = g.get_repo("marzenazielinska0503-byte/moje_notatki")
 st.set_page_config(page_title="Inteligentna nauka", layout="wide")
 
-# Inicjalizacja stanów
 if "pdf_page" not in st.session_state: st.session_state.pdf_page = 0
-if "highlight_text" not in st.session_state: st.session_state.highlight_text = ""
-
-# --- 3. FUNKCJE PREMIUM ---
-
-def generate_premium_audio(text, voice_name):
-    """Generuje dźwięk najwyższej jakości OpenAI TTS"""
-    try:
-        response = client.audio.speech.create(
-            model="tts-1",
-            voice=voice_name,
-            input=text[:4000] # Bezpieczny limit znaków dla strony
-        )
-        return response.content
-    except Exception as e:
-        st.error(f"Błąd lektora: {e}")
-        return None
+if "last_file" not in st.session_state: st.session_state.last_file = ""
 
 @st.cache_data(show_spinner=False)
-def fetch_pdf_from_github(path):
+def fetch_pdf_cached(path):
     return repo.get_contents(path).decoded_content
 
-def render_page_with_marker(pdf_bytes, page_num, search_text=""):
-    """Renderuje stronę i nakłada marker"""
+@st.cache_data(show_spinner=False)
+def render_page_img(pdf_bytes, page_num):
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     page = doc.load_page(page_num)
-    if search_text:
-        text_instances = page.search_for(search_text)
-        for inst in text_instances:
-            page.add_rect_annot(inst).set_colors(stroke=(1, 0, 0)) 
-    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
-    img_bytes = pix.tobytes("png")
-    doc.close()
-    return img_bytes
+    pix = page.get_pixmap(matrix=fitz.Matrix(1.5, 1.5))
+    return pix.tobytes("png")
 
-# --- 4. PANEL BOCZNY ---
+def get_premium_audio(text, voice):
+    """Lektor OpenAI Premium"""
+    response = client.audio.speech.create(model="tts-1", voice=voice, input=text[:4000])
+    return response.content
+
+# --- 3. PANEL BOCZNY (USTAWIENIA) ---
 with st.sidebar:
     st.title("📂 Biblioteka")
-    
-    st.subheader("🎙️ Wybierz Lektora")
-    selected_voice = st.selectbox("Głos:", ["nova", "shimmer", "alloy", "onyx", "fable"], help="Nova to głos kobiecy, Onyx to męski.")
-    
+    selected_voice = st.selectbox("🎙️ Wybierz głos:", ["nova", "shimmer", "alloy", "onyx"])
     st.markdown("---")
+    
     cats = [c.name for c in repo.get_contents("baza_wiedzy") if c.type == "dir"]
     selected_cat = st.selectbox("Przedmiot:", ["---"] + cats)
     
-    full_text, current_pdf_bytes, selected_file = "", None, "Brak"
+    current_pdf_bytes, selected_file, full_text_with_pages = None, "Brak", {}
     
     if selected_cat != "---":
         files = [c.name for c in repo.get_contents(f"baza_wiedzy/{selected_cat}") if c.name.endswith('.pdf')]
-        selected_file = st.selectbox("Plik PDF:", ["Brak"] + files)
+        selected_file = st.selectbox("Plik:", ["Brak"] + files)
         
         if selected_file != "Brak":
-            current_pdf_bytes = fetch_pdf_from_github(f"baza_wiedzy/{selected_cat}/{selected_file}")
-            # Przygotowanie tekstu dla AI z podziałem na strony
+            if st.session_state.last_file != selected_file:
+                st.session_state.pdf_page = 0
+                st.session_state.last_file = selected_file
+            
+            path = f"baza_wiedzy/{selected_cat}/{selected_file}"
+            current_pdf_bytes = fetch_pdf_cached(path)
+            
+            # Szybkie czytanie tekstu
             doc = fitz.open(stream=current_pdf_bytes, filetype="pdf")
-            full_text = "".join([f"\n[ID:{i}]\n{p.get_text()}" for i, p in enumerate(doc)])
+            for i, p in enumerate(doc):
+                full_text_with_pages[i] = p.get_text()
             doc.close()
 
-# --- 5. GŁÓWNY EKRAN (DWIE KOLUMNY) ---
+# --- 4. GŁÓWNY EKRAN (UKŁAD) ---
 st.title("🧠 Inteligentna nauka")
 col1, col2 = st.columns([1, 1.3])
 
 with col1:
-    st.subheader("❓ Zadaj pytanie AI")
-    q = st.text_input("Wpisz pytanie (AI samo otworzy PDF na właściwej stronie):")
+    st.subheader("❓ Zadaj pytanie")
+    # PRZYWRÓCONE: Wklejanie ze schowka (Ctrl+V)
+    pasted_img = st.file_uploader("Wklej obrazek (Ctrl+V):", type=['png', 'jpg', 'jpeg'], key="paste_up")
+    q = st.text_input("Wpisz pytanie (AI odpowie konkretnie):")
 
-    if st.button("Zapytaj") or q:
-        with st.spinner("Szukam odpowiedzi w Twoich notatkach..."):
-            # AI zwraca odpowiedź i ID strony
-            res = client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "system", "content": "Odpowiadaj na podstawie notatek. Na końcu dodaj [ID:X] gdzie X to strona."},
-                          {"role": "user", "content": f"NOTATKI: {full_text[:15000]}\n\nPYTANIE: {q}"}]
-            ).choices[0].message.content
+    if st.button("Zapytaj AI") or (pasted_img and not q):
+        with st.spinner("Szukam konkretnej odpowiedzi..."):
+            context_string = "\n".join([f"[Strona {i}]: {t}" for i, t in full_text_with_pages.items()])
             
-            # Automatyczny skok do strony źródłowej
+            # Prompt wymuszający konkretną odpowiedź
+            messages = [
+                {"role": "system", "content": "Jesteś precyzyjnym asystentem. Odpowiadaj bardzo krótko (np. 'Odpowiedź A' lub 'B, bo...'). Nie używaj zbędnych słów. Podaj numer strony w formacie [ID:X]."},
+                {"role": "user", "content": f"KONTEKST: {context_string[:15000]}\n\nPYTANIE: {q if q else 'Rozwiąż zadanie ze zdjęcia'}"}
+            ]
+            
+            res = client.chat.completions.create(model="gpt-4o-mini", messages=messages).choices[0].message.content
+            
+            # Logika skoku do strony
             match = re.search(r"\[ID:(\d+)\]", res)
-            if match: 
-                st.session_state.pdf_page = int(match.group(1))
+            if match: st.session_state.pdf_page = int(match.group(1))
             
             clean_res = re.sub(r"\[ID:\d+\]", "", res)
-            st.info(f"📍 Źródło: Strona {st.session_state.pdf_page + 1}\n\n{clean_res}")
+            st.success(clean_res)
             
-            # Głos Premium dla odpowiedzi AI
-            audio_ans = generate_premium_audio(clean_res, selected_voice)
-            if audio_ans: st.audio(audio_ans, autoplay=True)
+            # OSOBNA IKONA ŹRÓDŁA
+            with st.expander("📖 Zobacz treść źródłową"):
+                st.write(full_text_with_pages.get(st.session_state.pdf_page, "Nie znaleziono tekstu."))
+            
+            st.audio(get_premium_audio(clean_res, selected_voice), autoplay=True)
 
 with col2:
     if current_pdf_bytes:
-        doc_temp = fitz.open(stream=current_pdf_bytes, filetype="pdf")
-        max_p = len(doc_temp)
+        max_p = len(full_text_with_pages)
+        st.subheader(f"📖 Strona {st.session_state.pdf_page + 1} z {max_p}")
         
-        st.subheader(f"📖 Podgląd: Strona {st.session_state.pdf_page + 1}")
-        
-        # 1. NAJPIERW WYŚWIETLAMY OBRAZ (Sync)
-        img = render_page_with_marker(current_pdf_bytes, st.session_state.pdf_page)
-        st.image(img, use_container_width=True)
-        
-        # 2. PANEL STEROWANIA AUDIOBOOKIEM
-        c1, c2, c3 = st.columns([1, 1, 1])
+        # NAWIGACJA + AUTOMATYCZNE STRONICOWANIE
+        c1, c2, c3 = st.columns([1, 2, 1])
         with c1:
-            if st.button("⬅️ Poprzednia"): 
-                if st.session_state.pdf_page > 0:
-                    st.session_state.pdf_page -= 1
-                    st.rerun()
+            if st.button("⬅️") and st.session_state.pdf_page > 0:
+                st.session_state.pdf_page -= 1; st.rerun()
         with c2:
-            # PRZYCISK CZYTANIA - czyta to co widoczne
-            if st.button("▶️ Czytaj tę stronę"):
-                txt = doc_temp[st.session_state.pdf_page].get_text()
+            # PRZYCISK AUDIOBOOKA ZE STRONICOWANIEM
+            if st.button("▶️ Czytaj i przejdź do następnej"):
+                txt = full_text_with_pages.get(st.session_state.pdf_page, "")
                 if txt.strip():
-                    with st.spinner("Lektor czyta bieżącą stronę..."):
-                        audio_p = generate_premium_audio(txt, selected_voice)
-                        if audio_p: st.audio(audio_p, autoplay=True)
-                else:
-                    st.warning("Brak tekstu na tej stronie.")
+                    audio = get_premium_audio(txt, selected_voice)
+                    st.audio(audio, autoplay=True)
+                    # Automatyczny skok po kliknięciu
+                    if st.session_state.pdf_page < max_p - 1:
+                        st.session_state.pdf_page += 1
+                else: st.warning("Pusta strona.")
         with c3:
-            if st.button("Następna ➡️"):
-                if st.session_state.pdf_page < max_p - 1:
-                    st.session_state.pdf_page += 1
-                    st.rerun()
+            if st.button("➡️") and st.session_state.pdf_page < max_p - 1:
+                st.session_state.pdf_page += 1; st.rerun()
+
+        # Wyświetlanie strony PDF jako obraz
+        st.image(render_page_img(current_pdf_bytes, st.session_state.pdf_page), use_container_width=True)
         
-        doc_temp.close()
-        
-        # 3. NOTATNIK
+        # Notatnik pod PDF
         st.markdown("---")
         notes_path = f"baza_wiedzy/{selected_cat}/{selected_file.replace('.pdf', '')}_notatki.txt"
         try: saved_notes = repo.get_contents(notes_path).decoded_content.decode()
         except: saved_notes = ""
-        user_notes = st.text_area("📝 Notatki do tej strony:", value=saved_notes, height=150)
-        if st.button("💾 Zapisz notatki"):
+        user_notes = st.text_area("📝 Notatki do tej strony:", value=saved_notes, height=100)
+        if st.button("💾 Zapisz"):
             try:
                 old = repo.get_contents(notes_path)
-                repo.update_file(notes_path, "update", user_notes, old.sha)
-            except: repo.create_file(notes_path, "create", user_notes)
-            st.success("Notatki zapisane!")
+                repo.update_file(notes_path, "up", user_notes, old.sha)
+            except: repo.create_file(notes_path, "cr", user_notes)
+            st.success("Zapisano!")
     else:
-        st.info("Wybierz przedmiot i plik z biblioteki.")
+        st.info("Wybierz plik z biblioteki.")
