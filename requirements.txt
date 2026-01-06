@@ -1,4 +1,6 @@
 streamlit
-gTTS
 openai
+gTTS
 PyPDF2
+PyGithub
+Pillow
