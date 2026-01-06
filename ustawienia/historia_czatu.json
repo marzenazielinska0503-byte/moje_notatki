@@ -198,5 +198,13 @@
   {
     "role": "assistant",
     "content": "Obraz przedstawia listę autorów, którzy wyróżnili trzy grupy przyczyn niepowodzeń szkolnych: społeczno-ekonomiczne, biopsychiczne i szkolne. Wyróżniony na zielono jest B. Lewowicki, co sugeruje, że to on może być głównym autorem lub najbardziej istotną osobą w kontekście tego zagadnienia. Pozostali autorzy to A. J. Konopnicki, F. Herbart i A. Nowakowski. Tekst wskazuje na podejście analityczne do problemów szkolnych, co jest ważne dla badań w pedagogice i psychologii."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Obraz przedstawia tekst dotyczący przyczyn niepowodzeń szkolnych, które zostały podzielone na trzy grupy: społeczno-ekonomiczne, biopsychiczne i szkolne. Wymienione są nazwiska autorów, z T. Lewowickim wyróżnionym w kolorze zielonym. Sugeruje to, że jego wkład był szczególnie istotny w tej kwestii."
   }
 ]
