@@ -1,6 +1,7 @@
 streamlit
 openai
+github
 gTTS
 PyPDF2
-PyGithub
+PyMuPDF
 Pillow
