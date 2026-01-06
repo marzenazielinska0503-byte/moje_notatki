@@ -6,7 +6,7 @@ import os
 import base64
 from PyPDF2 import PdfReader
 from io import BytesIO
-import fitz  # To jest PyMuPDF
+import fitz  # PyMuPDF
 from PIL import Image
 
 # --- 1. LOGOWANIE ---
@@ -30,19 +30,30 @@ g = Github(st.secrets["GITHUB_TOKEN"])
 repo = g.get_repo("marzenazielinska0503-byte/moje_notatki")
 st.set_page_config(page_title="Inteligentna nauka", layout="wide")
 
+# Inicjalizacja stanu strony PDF
+if "pdf_page" not in st.session_state:
+    st.session_state.pdf_page = 0
+
 # --- 3. FUNKCJE POMOCNICZE ---
 
-def display_pdf_as_images(pdf_bytes):
-    """Przerabia PDF na obrazy i wyświetla je w kolumnie"""
+def display_single_page(pdf_bytes, page_num):
+    """Renderuje tylko jedną wybraną stronę PDF jako obraz"""
     try:
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-        for page_num in range(len(doc)):
-            page = doc.load_page(page_num)
-            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2)) # Wyższa jakość
-            img_data = pix.tobytes("png")
-            st.image(img_data, caption=f"Strona {page_num + 1}", use_container_width=True)
+        total_pages = len(doc)
+        
+        # Zabezpieczenie zakresu stron
+        page_num = max(0, min(page_num, total_pages - 1))
+        
+        page = doc.load_page(page_num)
+        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2)) # Skalowanie x2 dla ostrości
+        img_data = pix.tobytes("png")
+        
+        st.image(img_data, caption=f"Strona {page_num + 1} z {total_pages}", use_container_width=True)
+        return total_pages
     except Exception as e:
-        st.error(f"Błąd generowania podglądu: {e}")
+        st.error(f"Błąd podglądu strony: {e}")
+        return 0
 
 def get_saved_notes(category, original_file):
     notes_path = f"baza_wiedzy/{category}/{original_file.replace('.pdf', '')}_notatki.txt"
@@ -82,6 +93,11 @@ with st.sidebar:
         selected_file = st.selectbox("Wybierz plik:", ["Brak"] + files)
         
         if selected_file != "Brak":
+            # Reset strony przy zmianie pliku
+            if "last_file" not in st.session_state or st.session_state.last_file != selected_file:
+                st.session_state.pdf_page = 0
+                st.session_state.last_file = selected_file
+            
             file_data = repo.get_contents(f"baza_wiedzy/{selected_cat}/{selected_file}")
             current_pdf_bytes = file_data.decoded_content
             pdf = PdfReader(BytesIO(current_pdf_bytes))
@@ -96,11 +112,11 @@ with st.sidebar:
 
 # --- 5. UKŁAD DWUKOLUMNOWY ---
 st.title("🧠 Inteligentna nauka")
-col1, col2 = st.columns([1, 1])
+col1, col2 = st.columns([1, 1.2]) # Prawa kolumna nieco szersza dla PDF
 
 with col1:
     st.subheader("❓ Zadaj pytanie AI")
-    pasted_file = st.file_uploader("Zrzut ekranu (Ctrl+V):", type=['png', 'jpg', 'jpeg'])
+    pasted_file = st.file_uploader("Zrzut ekranu (Ctrl+V):", type=['png', 'jpg', 'jpeg'], key="main_uploader")
     q = st.text_input("Twoje pytanie:")
 
     if st.button("Zapytaj") or pasted_file:
@@ -117,18 +133,40 @@ with col2:
     if current_pdf_bytes:
         st.subheader(f"📖 Podgląd: {selected_file}")
         
-        # PRZYCISK POBIERANIA (zawsze działa jako fallback)
-        st.download_button(label="📥 Pobierz plik na dysk", data=current_pdf_bytes, file_name=selected_file, mime="application/pdf")
+        # --- NAWIGACJA STRONAMI ---
+        # Tworzymy 3 kolumny dla przycisków sterowania
+        p1, p2, p3 = st.columns([1, 2, 1])
         
-        # NOWY PODGLĄD OBRAZOWY (zamiast iframe)
+        # Tymczasowo otwieramy dokument, by znać liczbę stron
+        doc_temp = fitz.open(stream=current_pdf_bytes, filetype="pdf")
+        max_p = len(doc_temp)
+        doc_temp.close()
+
+        with p1:
+            if st.button("⬅️ Poprzednia"):
+                if st.session_state.pdf_page > 0:
+                    st.session_state.pdf_page -= 1
+                    st.rerun()
+        
+        with p2:
+            # Suwak do szybkiego skakania po stronach
+            st.session_state.pdf_page = st.slider("Idź do strony:", 0, max_p-1, st.session_state.pdf_page, format="Str. %d")
+            
+        with p3:
+            if st.button("Następna ➡️"):
+                if st.session_state.pdf_page < max_p - 1:
+                    st.session_state.pdf_page += 1
+                    st.rerun()
+
         st.markdown("---")
-        with st.container(height=600):
-            display_pdf_as_images(current_pdf_bytes)
+        
+        # Wyświetlanie tylko aktualnej strony
+        display_single_page(current_pdf_bytes, st.session_state.pdf_page)
         
         st.markdown("---")
         st.subheader("📝 Twoje notatki")
         saved_text = get_saved_notes(selected_cat, selected_file)
-        user_notes = st.text_area("Pisz tutaj:", value=saved_text, height=250)
+        user_notes = st.text_area("Twoje uwagi do tego pliku:", value=saved_text, height=200)
         
         if st.button("Zapisz notatki"):
             notes_path = f"baza_wiedzy/{selected_cat}/{selected_file.replace('.pdf', '')}_notatki.txt"
