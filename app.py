@@ -11,7 +11,7 @@ if "auth" not in st.session_state:
     st.session_state["auth"] = False
 
 if not st.session_state["auth"]:
-    st.title("🔒 Prywatny Asystent Synapse AI")
+    st.title("🔒 Prywatny Asystent")
     pwd = st.text_input("Podaj swoje indywidualne hasło:", type="password")
     if st.button("Zaloguj"):
         if pwd in st.secrets["passwords"].values():
@@ -26,11 +26,10 @@ client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 g = Github(st.secrets["GITHUB_TOKEN"])
 repo = g.get_repo("marzenazielinska0503-byte/moje_notatki")
 
-st.set_page_config(page_title="Synapse AI - Automat", layout="wide")
+st.set_page_config(page_title="Inteligentna nauka", layout="wide")
 
 # --- 3. FUNKCJE POMOCNICZE ---
 def analyze_image_vision(image_bytes, user_query="Rozwiąż to zadanie lub odpowiedz na pytanie ze zdjęcia."):
-    """Funkcja obsługująca Vision AI dla zrzutów ekranu"""
     base64_img = base64.b64encode(image_bytes).decode('utf-8')
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -46,51 +45,64 @@ def analyze_image_vision(image_bytes, user_query="Rozwiąż to zadanie lub odpow
 
 def get_categories():
     try:
-        return [c.name for c in repo.get_contents("baza_wiedzy") if c.type == "dir"]
-    except: return []
+        contents = repo.get_contents("baza_wiedzy")
+        return [c.name for c in contents if c.type == "dir"]
+    except:
+        return []
 
-# --- 4. PANEL BOCZNY (BIBLIOTEKA PDF) ---
+# --- 4. PANEL BOCZNY (ZARZĄDZANIE BIBLIOTEKĄ) ---
 with st.sidebar:
-    st.header("📂 Biblioteka PDF")
-    cats = get_categories()
-    selected_cat = st.selectbox("Wybierz przedmiot:", cats if cats else ["Brak kategorii"])
+    st.title("📂 Twoja Biblioteka")
     
+    # SEKCJA: TWORZENIE KATEGORII
+    st.subheader("🆕 Nowa kategoria")
+    new_cat_name = st.text_input("Wpisz nazwę (np. Historia):")
+    if st.button("Utwórz kategorię"):
+        if new_cat_name:
+            # Tworzymy folder na GitHubie poprzez dodanie ukrytego pliku .keep
+            path = f"baza_wiedzy/{new_cat_name}/.keep"
+            repo.create_file(path, f"Inicjalizacja kategorii: {new_cat_name}", "")
+            st.success(f"Utworzono kategorię: {new_cat_name}")
+            st.rerun()
+        else:
+            st.warning("Wpisz nazwę kategorii!")
+
     st.markdown("---")
-    st.subheader("➕ Dodaj PDF do bazy")
-    new_pdf = st.file_uploader("Wgraj PDF na stałe", type=['pdf'])
-    if new_pdf and st.button("Zapisz w bazie"):
-        path = f"baza_wiedzy/{selected_cat}/{new_pdf.name}"
-        repo.create_file(path, f"Dodano PDF: {new_pdf.name}", new_pdf.getvalue())
-        st.success("PDF dodany do bazy danych!")
+    
+    # SEKCJA: WYBÓR I DODAWANIE PLIKÓW
+    cats = get_categories()
+    selected_cat = st.selectbox("Wybierz przedmiot do nauki:", ["---"] + cats)
+    
+    if selected_cat != "---":
+        st.subheader(f"➕ Dodaj PDF do: {selected_cat}")
+        new_pdf = st.file_uploader("Wgraj PDF na stałe", type=['pdf'], key="pdf_uploader")
+        if new_pdf and st.button("Zapisz w bazie"):
+            path = f"baza_wiedzy/{selected_cat}/{new_pdf.name}"
+            repo.create_file(path, f"Dodano PDF: {new_pdf.name}", new_pdf.getvalue())
+            st.success("Plik zapisany na GitHubie!")
 
 # --- 5. GŁÓWNY EKRAN (AUTOMAT ZE SCHOWKA) ---
-st.title("🧠 Synapse AI: Tryb Automatyczny")
+st.title("🧠 Inteligentna nauka")
 st.write("Wklej zrzut ekranu (Ctrl+V) poniżej, aby od razu uzyskać odpowiedź.")
 
-# Pole wgrywania obsługuje wklejanie ze schowka
-pasted_file = st.file_uploader("Wklej obrazek ze schowka lub przeciągnij plik:", type=['png', 'jpg', 'jpeg'])
+# Główny automat do zdjęć ze schowka
+pasted_file = st.file_uploader("Wklej obrazek ze schowka lub przeciągnij plik:", type=['png', 'jpg', 'jpeg'], key="main_uploader")
 custom_question = st.text_input("Dodatkowe pytanie (opcjonalnie):", placeholder="Możesz zostawić puste dla automatu")
 
-# --- MAGIA AUTOMATU ---
 if pasted_file:
-    # Program reaguje natychmiast po pojawieniu się pliku
     with st.spinner("AI analizuje Twój zrzut ekranu..."):
-        # Jeśli pole tekstowe jest puste, AI samo domyśla się, że ma rozwiązać zadanie
         query = custom_question if custom_question else "To jest zrzut ekranu z pytaniem/zadaniem. Rozwiąż je precyzyjnie po polsku."
-        
         try:
             wynik = analyze_image_vision(pasted_file.getvalue(), query)
-            
             st.subheader("📝 Rozwiązanie:")
             st.write(wynik)
             
-            # Automatyczny lektor
+            # Lektor
             tts = gTTS(text=wynik, lang='pl')
             tts.save("voice.mp3")
             st.audio("voice.mp3")
-            
         except Exception as e:
-            st.error(f"Błąd analizy: {e}")
+            st.error(f"Błąd: {e}")
 
 elif not pasted_file and not custom_question:
     st.info("Czekam na Twój zrzut ekranu ze schowka...")
