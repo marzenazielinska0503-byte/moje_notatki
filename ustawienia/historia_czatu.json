@@ -14,5 +14,13 @@
   {
     "role": "assistant",
     "content": "Opis przedstawia definicję naśladownictwa, które polega na wykonywaniu działań i zachowań po obserwacji innych. Wskazuje, że jest to proces występujący zarówno u zwierząt, jak i u ludzi, przez całe życie. Naśladownictwo odgrywa istotną rolę w edukacji i rozwoju jednostki."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Obraz przedstawia pytanie dotyczące definicji pojęcia, które opisuje naśladowanie działań i zachowań innych osób. Odpowiedzią jest \"Naśladownictwo\". Termin ten odnosi się do obserwacji i powielania działań, co występuje zarówno u zwierząt, jak i u ludzi przez całe życie."
   }
 ]
