@@ -30,30 +30,21 @@ g = Github(st.secrets["GITHUB_TOKEN"])
 repo = g.get_repo("marzenazielinska0503-byte/moje_notatki")
 st.set_page_config(page_title="Inteligentna nauka", layout="wide")
 
-# Inicjalizacja stanu strony PDF
-if "pdf_page" not in st.session_state:
-    st.session_state.pdf_page = 0
+# --- 3. FUNKCJE Z OPTYMALIZACJĄ (CACHING) ---
 
-# --- 3. FUNKCJE POMOCNICZE ---
+@st.cache_data(show_spinner=False)
+def fetch_pdf_from_github(path):
+    """Pobiera plik raz i trzyma go w szybkiej pamięci cache"""
+    file_data = repo.get_contents(path)
+    return file_data.decoded_content
 
-def display_single_page(pdf_bytes, page_num):
-    """Renderuje tylko jedną wybraną stronę PDF jako obraz"""
-    try:
-        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-        total_pages = len(doc)
-        
-        # Zabezpieczenie zakresu stron
-        page_num = max(0, min(page_num, total_pages - 1))
-        
-        page = doc.load_page(page_num)
-        pix = page.get_pixmap(matrix=fitz.Matrix(2, 2)) # Skalowanie x2 dla ostrości
-        img_data = pix.tobytes("png")
-        
-        st.image(img_data, caption=f"Strona {page_num + 1} z {total_pages}", use_container_width=True)
-        return total_pages
-    except Exception as e:
-        st.error(f"Błąd podglądu strony: {e}")
-        return 0
+@st.cache_data(show_spinner=False)
+def render_page_cached(pdf_bytes, page_num):
+    """Zapamiętuje wyrenderowane obrazy stron, by nie robić tego dwa razy"""
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    page = doc.load_page(page_num)
+    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
+    return pix.tobytes("png")
 
 def get_saved_notes(category, original_file):
     notes_path = f"baza_wiedzy/{category}/{original_file.replace('.pdf', '')}_notatki.txt"
@@ -93,13 +84,10 @@ with st.sidebar:
         selected_file = st.selectbox("Wybierz plik:", ["Brak"] + files)
         
         if selected_file != "Brak":
-            # Reset strony przy zmianie pliku
-            if "last_file" not in st.session_state or st.session_state.last_file != selected_file:
-                st.session_state.pdf_page = 0
-                st.session_state.last_file = selected_file
+            # Szybkie pobieranie z cache
+            path = f"baza_wiedzy/{selected_cat}/{selected_file}"
+            current_pdf_bytes = fetch_pdf_from_github(path)
             
-            file_data = repo.get_contents(f"baza_wiedzy/{selected_cat}/{selected_file}")
-            current_pdf_bytes = file_data.decoded_content
             pdf = PdfReader(BytesIO(current_pdf_bytes))
             library_context = "".join([page.extract_text() for page in pdf.pages])
 
@@ -107,12 +95,16 @@ with st.sidebar:
         up_pdf = st.file_uploader("Dodaj PDF", type=['pdf'])
         if up_pdf and st.button("Wyślij"):
             repo.create_file(f"baza_wiedzy/{selected_cat}/{up_pdf.name}", "add", up_pdf.getvalue())
+            st.cache_data.clear() # Czyścimy cache po dodaniu nowego pliku
             st.success("Zapisano!")
             st.rerun()
 
 # --- 5. UKŁAD DWUKOLUMNOWY ---
 st.title("🧠 Inteligentna nauka")
-col1, col2 = st.columns([1, 1.2]) # Prawa kolumna nieco szersza dla PDF
+col1, col2 = st.columns([1, 1.2])
+
+if "pdf_page" not in st.session_state:
+    st.session_state.pdf_page = 0
 
 with col1:
     st.subheader("❓ Zadaj pytanie AI")
@@ -133,40 +125,31 @@ with col2:
     if current_pdf_bytes:
         st.subheader(f"📖 Podgląd: {selected_file}")
         
-        # --- NAWIGACJA STRONAMI ---
-        # Tworzymy 3 kolumny dla przycisków sterowania
-        p1, p2, p3 = st.columns([1, 2, 1])
-        
-        # Tymczasowo otwieramy dokument, by znać liczbę stron
+        # Nawigacja
         doc_temp = fitz.open(stream=current_pdf_bytes, filetype="pdf")
         max_p = len(doc_temp)
         doc_temp.close()
 
+        p1, p2, p3 = st.columns([1, 2, 1])
         with p1:
-            if st.button("⬅️ Poprzednia"):
-                if st.session_state.pdf_page > 0:
-                    st.session_state.pdf_page -= 1
-                    st.rerun()
-        
+            if st.button("⬅️ Poprzednia") and st.session_state.pdf_page > 0:
+                st.session_state.pdf_page -= 1
+                st.rerun()
         with p2:
-            # Suwak do szybkiego skakania po stronach
-            st.session_state.pdf_page = st.slider("Idź do strony:", 0, max_p-1, st.session_state.pdf_page, format="Str. %d")
-            
+            st.session_state.pdf_page = st.slider("Strona:", 0, max_p-1, st.session_state.pdf_page)
         with p3:
-            if st.button("Następna ➡️"):
-                if st.session_state.pdf_page < max_p - 1:
-                    st.session_state.pdf_page += 1
-                    st.rerun()
+            if st.button("Następna ➡️") and st.session_state.pdf_page < max_p - 1:
+                st.session_state.pdf_page += 1
+                st.rerun()
 
-        st.markdown("---")
-        
-        # Wyświetlanie tylko aktualnej strony
-        display_single_page(current_pdf_bytes, st.session_state.pdf_page)
+        # Wyświetlanie zoptymalizowane
+        img_bytes = render_page_cached(current_pdf_bytes, st.session_state.pdf_page)
+        st.image(img_bytes, use_container_width=True)
         
         st.markdown("---")
         st.subheader("📝 Twoje notatki")
         saved_text = get_saved_notes(selected_cat, selected_file)
-        user_notes = st.text_area("Twoje uwagi do tego pliku:", value=saved_text, height=200)
+        user_notes = st.text_area("Twoje uwagi:", value=saved_text, height=150)
         
         if st.button("Zapisz notatki"):
             notes_path = f"baza_wiedzy/{selected_cat}/{selected_file.replace('.pdf', '')}_notatki.txt"
@@ -175,6 +158,6 @@ with col2:
                 repo.update_file(notes_path, "update", user_notes, old.sha)
             except:
                 repo.create_file(notes_path, "create", user_notes)
-            st.success("Notatki zapisane!")
+            st.success("Zapisano!")
     else:
-        st.info("Wybierz plik z biblioteki po lewej.")
+        st.info("Wybierz plik z biblioteki.")
