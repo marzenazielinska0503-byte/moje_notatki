@@ -7,7 +7,7 @@ import base64
 from PyPDF2 import PdfReader
 from io import BytesIO
 import fitz  # PyMuPDF
-from PIL import Image
+import re
 
 # --- 1. LOGOWANIE ---
 if "auth" not in st.session_state:
@@ -30,38 +30,53 @@ g = Github(st.secrets["GITHUB_TOKEN"])
 repo = g.get_repo("marzenazielinska0503-byte/moje_notatki")
 st.set_page_config(page_title="Inteligentna nauka", layout="wide")
 
-# --- 3. FUNKCJE Z OPTYMALIZACJĄ (CACHING) ---
+# Inicjalizacja stanów
+if "pdf_page" not in st.session_state: st.session_state.pdf_page = 0
+if "highlight_text" not in st.session_state: st.session_state.highlight_text = ""
+
+# --- 3. FUNKCJE Z OPTYMALIZACJĄ ---
 
 @st.cache_data(show_spinner=False)
 def fetch_pdf_from_github(path):
-    """Pobiera plik raz i trzyma go w szybkiej pamięci cache"""
-    file_data = repo.get_contents(path)
-    return file_data.decoded_content
+    return repo.get_contents(path).decoded_content
 
-@st.cache_data(show_spinner=False)
-def render_page_cached(pdf_bytes, page_num):
-    """Zapamiętuje wyrenderowane obrazy stron, by nie robić tego dwa razy"""
+def render_page_with_marker(pdf_bytes, page_num, search_text=""):
+    """Renderuje stronę i zaznacza tekst na czerwono jeśli go znajdzie"""
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     page = doc.load_page(page_num)
+    
+    if search_text:
+        # Szukanie współrzędnych tekstu na stronie
+        text_instances = page.search_for(search_text)
+        for inst in text_instances:
+            # Rysujemy czerwoną ramkę wokół źródła
+            page.add_rect_annot(inst).set_colors(stroke=(1, 0, 0)) 
+    
     pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))
-    return pix.tobytes("png")
+    img_bytes = pix.tobytes("png")
+    doc.close()
+    return img_bytes
 
-def get_saved_notes(category, original_file):
-    notes_path = f"baza_wiedzy/{category}/{original_file.replace('.pdf', '')}_notatki.txt"
-    try:
-        return repo.get_contents(notes_path).decoded_content.decode()
-    except: return ""
+def get_full_context_with_pages(pdf_bytes):
+    doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+    context = ""
+    for i in range(len(doc)):
+        context += f"\n--- STRONA {i} ---\n{doc[i].get_text()}"
+    doc.close()
+    return context
 
-def analyze_content(user_query, image_bytes=None, text_context=None):
-    if image_bytes:
-        base64_img = base64.b64encode(image_bytes).decode('utf-8')
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[{"role": "user", "content": [{"type": "text", "text": user_query}, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_img}"}}]}]
-        )
-    else:
-        prompt = f"Źródło: {text_context[:15000]}\n\nPytanie: {user_query}" if text_context else user_query
-        response = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}])
+def analyze_and_locate(user_query, text_context):
+    """AI znajduje odpowiedź, stronę i konkretny cytat"""
+    system_prompt = (
+        "Odpowiadaj na podstawie notatek. Na końcu odpowiedzi DODAJ DOKŁADNIE TEN FORMAT: "
+        "STRONA:X | CYTAT: 'fragment tekstu z notatek'. Gdzie X to numer strony (liczony od 0)."
+    )
+    
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[{"role": "system", "content": system_prompt},
+                  {"role": "user", "content": f"NOTATKI:\n{text_context[:15000]}\n\nPYTANIE: {user_query}"}]
+    )
     return response.choices[0].message.content
 
 # --- 4. PANEL BOCZNY ---
@@ -75,89 +90,89 @@ with st.sidebar:
 
     st.markdown("---")
     cats = [c.name for c in repo.get_contents("baza_wiedzy") if c.type == "dir"]
-    selected_cat = st.selectbox("Wybierz przedmiot:", ["---"] + cats)
+    selected_cat = st.selectbox("Przedmiot:", ["---"] + cats)
     
-    library_context, current_pdf_bytes, selected_file = "", None, "Brak"
+    full_library_text, current_pdf_bytes, selected_file = "", None, "Brak"
     
     if selected_cat != "---":
         files = [c.name for c in repo.get_contents(f"baza_wiedzy/{selected_cat}") if c.name.endswith('.pdf')]
-        selected_file = st.selectbox("Wybierz plik:", ["Brak"] + files)
+        selected_file = st.selectbox("Plik:", ["Brak"] + files)
         
         if selected_file != "Brak":
-            # Szybkie pobieranie z cache
-            path = f"baza_wiedzy/{selected_cat}/{selected_file}"
-            current_pdf_bytes = fetch_pdf_from_github(path)
-            
-            pdf = PdfReader(BytesIO(current_pdf_bytes))
-            library_context = "".join([page.extract_text() for page in pdf.pages])
+            current_pdf_bytes = fetch_pdf_from_github(f"baza_wiedzy/{selected_cat}/{selected_file}")
+            full_library_text = get_full_context_with_pages(current_pdf_bytes)
 
         st.markdown("---")
         up_pdf = st.file_uploader("Dodaj PDF", type=['pdf'])
         if up_pdf and st.button("Wyślij"):
             repo.create_file(f"baza_wiedzy/{selected_cat}/{up_pdf.name}", "add", up_pdf.getvalue())
-            st.cache_data.clear() # Czyścimy cache po dodaniu nowego pliku
-            st.success("Zapisano!")
+            st.cache_data.clear()
             st.rerun()
 
-# --- 5. UKŁAD DWUKOLUMNOWY ---
+# --- 5. GŁÓWNY EKRAN ---
 st.title("🧠 Inteligentna nauka")
-col1, col2 = st.columns([1, 1.2])
-
-if "pdf_page" not in st.session_state:
-    st.session_state.pdf_page = 0
+col1, col2 = st.columns([1, 1.3])
 
 with col1:
-    st.subheader("❓ Zadaj pytanie AI")
-    pasted_file = st.file_uploader("Zrzut ekranu (Ctrl+V):", type=['png', 'jpg', 'jpeg'], key="main_uploader")
-    q = st.text_input("Twoje pytanie:")
+    st.subheader("❓ Pytanie")
+    pasted_img = st.file_uploader("Zrzut (Ctrl+V):", type=['png', 'jpg', 'jpeg'])
+    q = st.text_input("Wpisz o co chcesz zapytać:")
 
-    if st.button("Zapytaj") or pasted_file:
-        with st.spinner("Myślę..."):
-            res = analyze_content(q if q else "Rozwiąż to.", pasted_file.getvalue() if pasted_file else None, library_context)
-            st.info(res)
+    if st.button("Zapytaj AI") or (pasted_img and not q):
+        with st.spinner("Przeszukuję dokumenty..."):
+            raw_res = analyze_and_locate(q if q else "Przeanalizuj to", full_library_text)
+            
+            # Ekstrakcja strony i cytatu
             try:
-                tts = gTTS(text=res, lang='pl')
-                tts.save("v.mp3")
-                st.audio("v.mp3")
-            except: pass
+                page_match = re.search(r"STRONA:(\d+)", raw_res)
+                quote_match = re.search(r"CYTAT: '(.*?)'", raw_res)
+                
+                if page_match:
+                    st.session_state.pdf_page = int(page_match.group(1))
+                if quote_match:
+                    st.session_state.highlight_text = quote_match.group(1)
+                
+                # Usuwamy tagi z widocznej odpowiedzi dla użytkownika
+                clean_res = re.sub(r"STRONA:\d+ \| CYTAT: '.*?'", "", raw_res)
+                st.info(clean_res)
+                
+                tts = gTTS(text=clean_res, lang='pl')
+                tts.save("ans.mp3")
+                st.audio("ans.mp3", autoplay=True)
+            except:
+                st.info(raw_res)
 
 with col2:
     if current_pdf_bytes:
-        st.subheader(f"📖 Podgląd: {selected_file}")
+        st.subheader(f"📖 Podgląd: strona {st.session_state.pdf_page + 1}")
         
         # Nawigacja
-        doc_temp = fitz.open(stream=current_pdf_bytes, filetype="pdf")
-        max_p = len(doc_temp)
-        doc_temp.close()
+        c1, c2, c3 = st.columns([1, 2, 1])
+        with c1: 
+            if st.button("⬅️"): st.session_state.pdf_page -= 1; st.rerun()
+        with c2:
+            st.session_state.pdf_page = st.slider("Strona:", 0, 100, st.session_state.pdf_page)
+        with c3:
+            if st.button("➡️"): st.session_state.pdf_page += 1; st.rerun()
 
-        p1, p2, p3 = st.columns([1, 2, 1])
-        with p1:
-            if st.button("⬅️ Poprzednia") and st.session_state.pdf_page > 0:
-                st.session_state.pdf_page -= 1
-                st.rerun()
-        with p2:
-            st.session_state.pdf_page = st.slider("Strona:", 0, max_p-1, st.session_state.pdf_page)
-        with p3:
-            if st.button("Następna ➡️") and st.session_state.pdf_page < max_p - 1:
-                st.session_state.pdf_page += 1
-                st.rerun()
-
-        # Wyświetlanie zoptymalizowane
-        img_bytes = render_page_cached(current_pdf_bytes, st.session_state.pdf_page)
-        st.image(img_bytes, use_container_width=True)
+        # Wyświetlanie z Markerem
+        img = render_page_with_marker(current_pdf_bytes, st.session_state.pdf_page, st.session_state.highlight_text)
+        st.image(img, use_container_width=True)
         
+        # NOTATNIK POD PDF
         st.markdown("---")
-        st.subheader("📝 Twoje notatki")
-        saved_text = get_saved_notes(selected_cat, selected_file)
-        user_notes = st.text_area("Twoje uwagi:", value=saved_text, height=150)
+        notes_path = f"baza_wiedzy/{selected_cat}/{selected_file.replace('.pdf', '')}_notatki.txt"
+        try:
+            saved_notes = repo.get_contents(notes_path).decoded_content.decode()
+        except: saved_notes = ""
         
-        if st.button("Zapisz notatki"):
-            notes_path = f"baza_wiedzy/{selected_cat}/{selected_file.replace('.pdf', '')}_notatki.txt"
+        user_notes = st.text_area("📝 Twoje notatki do tego dokumentu:", value=saved_notes, height=150)
+        if st.button("💾 Zapisz moje notatki"):
             try:
                 old = repo.get_contents(notes_path)
                 repo.update_file(notes_path, "update", user_notes, old.sha)
             except:
                 repo.create_file(notes_path, "create", user_notes)
-            st.success("Zapisano!")
+            st.success("Notatki zapisane na GitHubie!")
     else:
         st.info("Wybierz plik z biblioteki.")
