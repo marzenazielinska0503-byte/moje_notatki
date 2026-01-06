@@ -30,5 +30,13 @@
   {
     "role": "assistant",
     "content": "Obraz przedstawia pytanie dotyczące przyczyn niepowodzeń szkolnych, które zostały podzielone na trzy grupy: społeczno-ekonomiczne, biopsychiczne i szkolne. Autorstwo jest przypisane do czterech osób, a jedna z nich (B. T. Lewowicki) jest wyróżniona. \n\nPytanie sugeruje, że została podana konkretna teoria lub koncepcja dotycząca przyczyn niepowodzeń w nauczaniu."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Na obrazie przedstawiono fragment tekstu dotyczący trzech grup przyczyn niepowodzeń szkolnych. Wymienione są cztery osoby, z czego jeden autor, B. T. Lewowicki, jest wyróżniony kolorem zielonym. Tekst wskazuje na kontekst związany z naukami edukacyjnymi i psychologicznymi."
   }
 ]
