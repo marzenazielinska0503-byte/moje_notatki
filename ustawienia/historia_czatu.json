@@ -38,5 +38,13 @@
   {
     "role": "assistant",
     "content": "Na obrazie przedstawiono fragment tekstu dotyczący trzech grup przyczyn niepowodzeń szkolnych. Wymienione są cztery osoby, z czego jeden autor, B. T. Lewowicki, jest wyróżniony kolorem zielonym. Tekst wskazuje na kontekst związany z naukami edukacyjnymi i psychologicznymi."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Obraz przedstawia pytanie dotyczące trzech grup przyczyn niepowodzeń szkolnych: społeczno-ekonomicznych, biopsychicznych i szkolnych. Autorami tych wyróżnień są: A. J. Konopnicki, B. T. Lewowicki, F. Herbert i A. Nowakowski. Wyróżnienie autora B. T. Lewowickiego jest zaznaczone na zielono, co może sugerować jego kluczową rolę w tej kategorii."
   }
 ]
