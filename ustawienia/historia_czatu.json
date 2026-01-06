@@ -126,5 +126,13 @@
   {
     "role": "assistant",
     "content": "Obraz przedstawia pytanie dotyczące trzech grup przyczyn niepowodzeń szkolnych. Wymienione są cztery nazwiska, z tym że jedno z nich, przypisane do \"B T. Lewowicki,\" jest wyróżnione zieloną czcionką, co sugeruje, że to kluczowy autor związany z tym zagadnieniem. Pozostałe nazwiska to: A J. Konopnicki, F. Herbart i A. Nowakowski."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Obraz przedstawia tekst dotyczący trzech grup przyczyn niepowodzeń szkolnych, które zostały wyróżnione przez podane nazwiska. Ważne jest, że jedno nazwisko (B. T. Lewowicki) jest zaznaczone na zielono, co może sugerować, że jest ono kluczowe lub poprawne w kontekście analizy."
   }
 ]
