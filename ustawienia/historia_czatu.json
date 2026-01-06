@@ -7,5 +7,14 @@
     "role": "assistant",
     "content": "**Psychologia to nauka zajmująca się badaniem umysłu i zachowania ludzi. Analizuje procesy myślowe, emocje, motywacje oraz interakcje społeczne.**\n\n---\n\n**Wyjaśnienie:**\nPsychologia obejmuje różne subdyscypliny, takie jak psychologia kliniczna, rozwojowa, społeczna i poznawcza. Bada, jak różne czynniki wpływają na zachowanie jednostki oraz jak można stosować tę wiedzę w praktyce, na przykład w terapii psychologicznej, edukacji czy organizacjach. Psychologia może także badać różne źródła motywacji, takie jak rywalizacja, co odnosi się do wewnętrznych i zewnętrznych czynników motywujących jednostki do działania. \n\n[ID:X]",
     "source_text": "Analiza wizualna strony."
+  },
+  {
+    "role": "user",
+    "content": "Odpowiedz na pytanie z obrazka"
+  },
+  {
+    "role": "assistant",
+    "content": "Odpowiedź: Styl rodzicielski\n\nWyjaśnienie: W kontekście postaw i stylów związanych z wychowaniem dzieci, \"styl rodzicielski\" odnosi się do specyficznego sposobu, w jaki rodzice zachowują się w stosunku do swoich dzieci. Termin ten wskazuje na tendencję do określonych metod wychowawczych, które rodzice przyjmują w kontaktach z dziećmi.",
+    "source_text": "Analiza wizualna strony."
   }
 ]
