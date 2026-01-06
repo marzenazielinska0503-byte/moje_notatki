@@ -30,5 +30,13 @@
   {
     "role": "assistant",
     "content": "Obraz przedstawia pytanie wielokrotnego wyboru dotyczące definicji zachowania w kontekście naśladowania. Wybrana odpowiedź, \"Naśladownictwo\", jest poprawna, ponieważ opisuje wykonanie działań lub zachowań, które są obserwowane u innych osób, zarówno u zwierząt, jak i u ludzi przez całe życie. Pozostałe opcje (internalizacja, wzmacnianie, interiorizacja) nie pasują do podanego opisu."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Obraz przedstawia tytuł \"Rywalizacja uczniów w klasie to rodzaj motywacji\" oraz dwa rodzaje motywacji: \"Wewnętrznej\" i \"Zewnętrznej\", z zaznaczoną zieloną \"Zewnętrzną\". To sugeruje, że rywalizacja jest traktowana jako motywator zewnętrzny, co może wskazywać na dążenie do wyników w oczach innych lub osiągnięcia związane z rywalizacją. Taki kontekst może zachęcać do dyskusji na temat wpływu rywalizacji na postawy i wyniki w edukacji."
   }
 ]
