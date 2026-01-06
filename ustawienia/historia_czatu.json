@@ -7,5 +7,14 @@
     "role": "assistant",
     "content": "B T. Lewowicki",
     "source_info": "To jest skan PDF – brak tekstu do wyświetlenia (AI przeanalizowało stronę wizualnie)."
+  },
+  {
+    "role": "user",
+    "content": "Co to jest psychologia?"
+  },
+  {
+    "role": "assistant",
+    "content": "Psychologia to nauka zajmująca się badaniem zachowań ludzi i procesów psychicznych, takich jak emocje, myśli i motywacje.",
+    "source_info": "To jest skan PDF – brak tekstu do wyświetlenia (AI przeanalizowało stronę wizualnie)."
   }
 ]
