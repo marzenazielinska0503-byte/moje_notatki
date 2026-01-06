@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "role": "user",
+    "content": "Odpowiedz na pytanie z obrazka"
+  },
+  {
+    "role": "assistant",
+    "content": "B T. Lewowicki",
+    "source_info": "To jest skan PDF – brak tekstu do wyświetlenia (AI przeanalizowało stronę wizualnie)."
+  }
+]
