@@ -34,5 +34,14 @@
     "role": "assistant",
     "content": "Odpowiedź na zadanie to: **B T. Lewowicki**.",
     "source_text": "Brak tekstu na tej stronie."
+  },
+  {
+    "role": "user",
+    "content": "Rozwiąż zadanie."
+  },
+  {
+    "role": "assistant",
+    "content": "Trzy grupy przyczyn niepowodzeń szkolnych, społecznо-ekonomiczne, biopsychiczne i szkolne, zostały wyróżnione przez: **B T. Lewowickiego**.",
+    "source_text": "Brak tekstu na tej stronie."
   }
 ]
