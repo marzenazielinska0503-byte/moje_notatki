@@ -142,5 +142,13 @@
   {
     "role": "assistant",
     "content": "Obraz przedstawia pytanie dotyczące klasyfikacji przyczyn niepowodzeń szkolnych, wymieniając cztery nazwiska, z wyróżnionym B. T. Lewowickim. Wskazuje to, że to on jest kluczową osobą w tym kontekście, odnoszącym się do grup przyczyn: społeczno-ekonomicznych, biopsychicznych i szkolnych."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Na obrazie podano trzy grupy przyczyn niepowodzeń szkolnych oraz autorów, którzy je wyróżnili. Wśród nich wyróżniony na zielono jest B. T. Lewowicki. Pozostali autorzy to A. J. Konopnicki, F. Herbart oraz A. Nowakowski. Tekst sugeruje, że Lewowicki odegrał istotną rolę w tej klasyfikacji."
   }
 ]
