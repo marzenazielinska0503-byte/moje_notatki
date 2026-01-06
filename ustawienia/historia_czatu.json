@@ -7,5 +7,14 @@
     "role": "assistant",
     "content": "Odpowiedź to: B T. Lewowicki. [ID:X]",
     "source_text": "Brak tekstu na tej stronie."
+  },
+  {
+    "role": "user",
+    "content": "Rozwiąż zadanie."
+  },
+  {
+    "role": "assistant",
+    "content": "Trzy grupy przyczyn niepowodzeń szkolnych zostały wyróżnione przez B. T. Lewowickiego.",
+    "source_text": "Brak tekstu na tej stronie."
   }
 ]
