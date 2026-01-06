@@ -1,1 +1,10 @@
-[]
+[
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Na obrazie przedstawiony jest tekst dotyczący przyczyn niepowodzeń szkolnych, które zostały podzielone na trzy grupy: społeczno-ekonomiczne, biopsychiczne i szkolne. Wymienieni zostali czterej autorzy, z czego B. T. Lewowicki wyróżniono kolorem zielonym, co może sugerować jego główną rolę lub znaczenie w kontekście przedstawionej analizy. Pozostali autorzy również przyczyniają się do tego tematu, ale bez dodatkowego wyróżnienia."
+  }
+]
