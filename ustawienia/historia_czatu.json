@@ -166,5 +166,13 @@
   {
     "role": "assistant",
     "content": "Obraz przedstawia pytanie dotyczące trzech grup przyczyn niepowodzeń szkolnych, które zostały wyróżnione przez czterech autorów. Autor B. T. Lewowicki jest wyróżniony w sposób, który sugeruje, że to on jest głównym źródłem tego podziału. Pozostali autorzy to A. J. Konopnicki, F. Herbart oraz A. Nowakowski. W kontekście edukacyjnym, może to wskazywać na różne podejścia do analizy przyczyn problemów szkolnych."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Obraz przedstawia pytanie dotyczące trzech grup przyczyn niepowodzeń szkolnych, które zostały wyróżnione przez czterech autorów. Odpowiedzią, zaznaczoną na zielono, jest \"B T. Lewowicki\". Pozostali autorzy to A J. Konopnicki, F. Herbart i A. Nowakowski."
   }
 ]
