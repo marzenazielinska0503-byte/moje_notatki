@@ -22,5 +22,13 @@
   {
     "role": "assistant",
     "content": "Obraz przedstawia pytanie dotyczące definicji pojęcia, które opisuje naśladowanie działań i zachowań innych osób. Odpowiedzią jest \"Naśladownictwo\". Termin ten odnosi się do obserwacji i powielania działań, co występuje zarówno u zwierząt, jak i u ludzi przez całe życie."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Obraz przedstawia pytanie wielokrotnego wyboru dotyczące definicji zachowania w kontekście naśladowania. Wybrana odpowiedź, \"Naśladownictwo\", jest poprawna, ponieważ opisuje wykonanie działań lub zachowań, które są obserwowane u innych osób, zarówno u zwierząt, jak i u ludzi przez całe życie. Pozostałe opcje (internalizacja, wzmacnianie, interiorizacja) nie pasują do podanego opisu."
   }
 ]
