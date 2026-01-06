@@ -25,5 +25,14 @@
     "role": "assistant",
     "content": "### Krótki wynik:\nPsychologia to nauka badająca procesy myślenia, emocje i zachowania ludzi oraz ich interakcje z otoczeniem.\n\n### Wyjaśnienie:\nPsychologia to dziedzina nauki, która zajmuje się badaniem umysłu i zachowania. Analizuje, jakie czynniki wpływają na myślenie, emocje, percepcję oraz jak te elementy oddziałują na zachowanie jednostki i grup społeczne. W psychologii wyróżnia się różne podejścia i specjalizacje, takie jak psychologia społeczna, rozwojowa, kliniczna czy edukacyjna, które koncentrują się na różnych aspektach ludzkiego doświadczenia i interakcji.",
     "source_text": "Analiza wizualna strony."
+  },
+  {
+    "role": "user",
+    "content": "Co to jest psychologia?"
+  },
+  {
+    "role": "assistant",
+    "content": "### Psychologia\n\nPsychologia to nauka badająca zachowanie i procesy mentalne ludzi oraz zwierząt. Zajmuje się różnorodnymi aspektami, takimi jak emocje, myśli, motywacje, interakcje społeczne oraz rozwój. Psycholodzy stosują różne metody badawcze, aby zrozumieć, jak ludzie myślą, czują i działają w różnych sytuacjach.\n\n### Wyjaśnienie:\nW kontekście szkoły, rywalizacja uczniów w klasie może być motywacją wewnętrzną lub zewnętrzną. Motywacja wewnętrzna pochodzi z samego ucznia (np. chęć nauki), natomiast motywacja zewnętrzna wynika z czynników zewnętrznych (np. nagrody, uznanie).",
+    "source_text": "Analiza wizualna strony."
   }
 ]
