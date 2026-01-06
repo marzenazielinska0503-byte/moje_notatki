@@ -1,0 +1,10 @@
+[
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Na podstawie opisu, który widzę, pytanie dotyczy wykonania czynności na podstawie obserwacji działań i zachowań innych osób. Odpowiedzią na to pytanie jest \"Naśladownictwo\". \n\nNaśladownictwo to proces, w którym jednostka wykonuje działanie, które wcześniej zaobserwowała u innych."
+  }
+]
