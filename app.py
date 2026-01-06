@@ -2,62 +2,65 @@ import streamlit as st
 from openai import OpenAI
 from gtts import gTTS
 import os
+from PyPDF2 import PdfReader
 
-# 1. Konfiguracja strony
-st.set_page_config(page_title="Synapse AI - Nauka", page_icon="🧠")
-
-# 2. Połączenie z OpenAI przy użyciu klucza z Twoich "Secrets"
+# 1. Konfiguracja i Styl
+st.set_page_config(page_title="Synapse AI - Twoja Baza Wiedzy", page_icon="📚")
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-st.title("🧠 Synapse AI: Twój Asystent Nauki")
+st.title("📚 Synapse AI: Personalny Asystent")
 st.markdown("---")
 
-# 3. Pole tekstowe - automatycznie wyzwala akcję po wklejeniu
-user_input = st.text_area("Wklej pytanie lub fragment tekstu ze schowka:", 
-                          placeholder="Np. Kiedy odbył się chrzest Polski?",
-                          height=150)
+# 2. Panel boczny do wgrywania notatek
+with st.sidebar:
+    st.header("📂 Twoje Materiały")
+    uploaded_file = st.file_uploader("Wgraj notatki (PDF lub TXT)", type=['pdf', 'txt'])
+    
+    if uploaded_file:
+        st.success(f"Załadowano: {uploaded_file.name}")
 
-# Funkcja lektora
-def play_audio(text):
-    tts = gTTS(text=text, lang='pl')
-    tts.save("speech.mp3")
-    st.audio("speech.mp3")
+# Funkcja do wyciągania tekstu z plików
+def get_text_from_file(file):
+    if file.type == "application/pdf":
+        pdf_reader = PdfReader(file)
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text()
+        return text
+    else:
+        return str(file.read(), "utf-8")
 
-# 4. Automatyczna reakcja na tekst
+# 3. Pole na pytanie
+user_input = st.text_area("Wklej pytanie dotyczące Twoich materiałów:", height=100)
+
 if user_input:
-    with st.spinner('Trwa analiza Twojego zapytania...'):
-        try:
-            # Zapytanie do AI
-            response = client.chat.completions.create(
-                model="gpt-4o-mini", # Najszybszy i najtańszy model
-                messages=[
-                    {"role": "system", "content": "Jesteś pomocnym asystentem nauki. Odpowiadaj konkretnie po polsku. Na końcu odpowiedzi zawsze dodaj sekcję 'ŹRÓDŁO', wskazując na ogólną wiedzę historyczną lub naukową, chyba że w pytaniu podano inaczej."},
-                    {"role": "user", "content": user_input}
-                ]
-            )
+    if not uploaded_file:
+        st.warning("⚠️ Najpierw wgraj swoje notatki w panelu po lewej stronie!")
+    else:
+        with st.spinner('Przeszukuję Twoje notatki...'):
+            # Wyciągamy treść z wgranego pliku
+            context_text = get_text_from_file(uploaded_file)
             
-            pelna_odpowiedz = response.choices[0].message.content
+            try:
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": f"Jesteś precyzyjnym asystentem nauki. Odpowiadaj WYŁĄCZNIE na podstawie dostarczonych notatek. Jeśli w notatkach nie ma odpowiedzi, powiedz: 'Niestety nie widzę tej informacji w Twoich materiałach'. OTO NOTATKI: {context_text[:15000]}"}, # Limit tekstu dla stabilności
+                        {"role": "user", "content": user_input}
+                    ]
+                )
+                
+                odp = response.choices[0].message.content
+                st.subheader("📝 Odpowiedź z Twoich notatek:")
+                st.write(odp)
 
-            # Rozdzielenie odpowiedzi od źródła (dla ładnego wyglądu)
-            if "ŹRÓDŁO" in pelna_odpowiedz:
-                tekst_odp, tekst_zrodlo = pelna_odpowiedz.split("ŹRÓDŁO", 1)
-            else:
-                tekst_odp, tekst_zrodlo = pelna_odpowiedz, "Wiedza ogólna AI"
+                # Lektor
+                if st.button("🔊 Odsłuchaj"):
+                    tts = gTTS(text=odp, lang='pl')
+                    tts.save("voice.mp3")
+                    st.audio("voice.mp3")
+                
+                st.caption(f"Źródło: Analiza pliku {uploaded_file.name}")
 
-            st.subheader("📝 Odpowiedź:")
-            st.write(tekst_odp)
-            
-            # Przycisk lektora
-            if st.button("🔊 Odsłuchaj odpowiedź"):
-                play_audio(tekst_odp)
-
-            # Sekcja źródła w rozwijanym pasku
-            with st.expander("🔍 Zobacz źródło informacji"):
-                st.info(tekst_zrodlo.strip(": "))
-
-        except Exception as e:
-            st.error(f"Wystąpił błąd: {e}")
-            st.info("Upewnij się, że Twój klucz API jest poprawnie dodany w Settings -> Secrets.")
-
-else:
-    st.info("Program czeka na wklejenie tekstu. Nie musisz nic klikać – odpowiedź pojawi się sama.")
+            except Exception as e:
+                st.error(f"Błąd: {e}")
