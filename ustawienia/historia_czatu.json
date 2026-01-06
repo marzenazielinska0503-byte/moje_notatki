@@ -14,5 +14,13 @@
   {
     "role": "assistant",
     "content": "Obraz przedstawia pytanie dotyczące kategorii przyczyn niepowodzeń szkolnych, z wymienionymi nazwiskami autorów. Kluczową postacią z wyróżnionym nazwiskiem jest T. Lewowicki. Wskazuje to na jego wkład w analizę tego tematu. Pozostałe wymienione osoby również mogą być związane z tym zagadnieniem, ale nie są wyróżnione."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Dokument przedstawia trzy grupy przyczyn niepowodzeń szkolnych, które zostały wyróżnione przez czterech autorów. Autor B. Lewowicki jest wyróżniony w zielonym, co może sugerować, że jest kluczowym źródłem dla tej analizy. Pozostali autorzy to A. J. Konopnicki, F. Herbart i A. Nowakowski. \n\nGrupy przyczyn wskazują na różnorodność aspektów, które mogą wpływać na edukację, w tym czynniki społeczne, ekonomiczne, biomedyczne i związane z systemem szkolnym. \n\n[ID:X]"
   }
 ]
