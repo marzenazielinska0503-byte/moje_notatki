@@ -182,5 +182,13 @@
   {
     "role": "assistant",
     "content": "Z analizy wynika, że wymieniono cztery osoby, z których B. Lewowicki jest wyróżniony, co sugeruje, że to on może być autorem lub kluczowym badaczem tej klasyfikacji przyczyn niepowodzeń szkolnych. Reszta wymienionych osób również jest ważna, ale ich rolą może być mniej centralna w tym kontekście."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Obraz przedstawia tekst, w którym wymienione są autorzy, którzy wyróżnili trzy grupy przyczyn niepowodzeń szkolnych: społeczno-ekonomiczne, biopsychiczne i szkolne. Jednym z autorów jest T. Lewowicki, którego nazwisko jest wyróżnione. Pozostali to A. J. Konopnicki, F. Herbart i A. Nowakowski."
   }
 ]
