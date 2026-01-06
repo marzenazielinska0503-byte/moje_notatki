@@ -78,5 +78,13 @@
   {
     "role": "assistant",
     "content": "Na obrazie przedstawione są trzy grupy przyczyn niepowodzeń szkolnych: społeczno-ekonomiczne, biopsychiczne i szkolne. Wyróżnione osoby to A. J. Konopnicki, B. T. Lewowicki, F. Herbart i A. Nowakowski. B. T. Lewowicki jest wyróżniony kolorem zielonym, co może sugerować, że jego wkład jest szczególnie istotny w kontekście omawianej tematyki."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Analizując podany tekst, można zauważyć, że przedstawia on trzy grupy przyczyn niepowodzeń szkolnych, które są klasyfikowane na kategorie społeczno-ekonomiczne, biopsychiczne i szkolne. Wymieniono również autorów, którzy wyróżnili te grupy, z wyraźnym akcentem na B. T. Lewowickiego, którego imię i nazwisko wyróżniono kolorem zielonym, co może sugerować, że jest on kluczowym autorem w tym kontekście. Pozostałe nazwiska to A. J. Konopnicki, F. Herbart i A. Nowakowski. \n\nTekst składa się z elementów typowych dla prac naukowych lub artykułów dotyczących psychologii edukacyjnej."
   }
 ]
