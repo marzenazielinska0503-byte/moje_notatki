@@ -22,5 +22,13 @@
   {
     "role": "assistant",
     "content": "Dokument przedstawia trzy grupy przyczyn niepowodzeń szkolnych, które zostały wyróżnione przez czterech autorów. Autor B. Lewowicki jest wyróżniony w zielonym, co może sugerować, że jest kluczowym źródłem dla tej analizy. Pozostali autorzy to A. J. Konopnicki, F. Herbart i A. Nowakowski. \n\nGrupy przyczyn wskazują na różnorodność aspektów, które mogą wpływać na edukację, w tym czynniki społeczne, ekonomiczne, biomedyczne i związane z systemem szkolnym. \n\n[ID:X]"
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Obraz przedstawia pytanie dotyczące przyczyn niepowodzeń szkolnych, które zostały podzielone na trzy grupy: społeczno-ekonomiczne, biopsychiczne i szkolne. Autorstwo jest przypisane do czterech osób, a jedna z nich (B. T. Lewowicki) jest wyróżniona. \n\nPytanie sugeruje, że została podana konkretna teoria lub koncepcja dotycząca przyczyn niepowodzeń w nauczaniu."
   }
 ]
