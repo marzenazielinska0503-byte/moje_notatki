@@ -46,5 +46,13 @@
   {
     "role": "assistant",
     "content": "Obraz przedstawia pytanie dotyczące trzech grup przyczyn niepowodzeń szkolnych: społeczno-ekonomicznych, biopsychicznych i szkolnych. Autorami tych wyróżnień są: A. J. Konopnicki, B. T. Lewowicki, F. Herbert i A. Nowakowski. Wyróżnienie autora B. T. Lewowickiego jest zaznaczone na zielono, co może sugerować jego kluczową rolę w tej kategorii."
+  },
+  {
+    "role": "user",
+    "content": "Pytanie obrazkowe"
+  },
+  {
+    "role": "assistant",
+    "content": "Obraz przedstawia tekst dotyczący przyczyn niepowodzeń szkolnych, które zostały podzielone na trzy grupy: społeczno-ekonomiczne, biopsychiczne i szkolne. Wymienieni są autorzy, w tym wyróżniony na zielono B. T. Lewowicki. To sugeruje jego kluczową rolę w tym kontekście. Pozostali autorzy to A. J. Konopnicki, F. Herbart i A. Nowakowski."
   }
 ]
