@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "role": "user",
+    "content": "Odpowiedz na pytanie z obrazka"
+  },
+  {
+    "role": "assistant",
+    "content": "### Odpowiedź\n\nTendencja do zachowywania się w pewien specyficzny sposób w stosunku do dziecka odnosi się do postaw rodzicielskich i wychowawczych oraz ich stylów. \n\n- **Postawa rodzicielska**: odnosi się do ogólnego podejścia rodzica do dziecka.\n- **Styl rodzicielski**: konkretne metody i techniki stosowane przez rodziców w wychowaniu.\n- **Postawa wychowawcza**: dotyczy podejścia do rol, jakie dorosły pełni w procesie wychowawczym.\n- **Styl wychowania**: grupowanie zachowań wychowawczych w oparciu o określone cechy i praktyki.\n\n### Podsumowanie\nObydwa pojęcia podkreślają różne aspekty interakcji dorosłych z dziećmi i mogą wpływać na ich rozwój.",
+    "source_text": "Analiza wizualna strony."
+  }
+]
