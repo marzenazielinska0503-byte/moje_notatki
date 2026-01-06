@@ -30,47 +30,25 @@ repo = g.get_repo("marzenazielinska0503-byte/moje_notatki")
 st.set_page_config(page_title="Inteligentna nauka", layout="wide")
 
 # --- 3. FUNKCJE POMOCNICZE ---
+def display_pdf_preview(pdf_bytes):
+    """Wyświetla podgląd PDF wewnątrz strony Streamlit"""
+    base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
+    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800" type="application/pdf"></iframe>'
+    st.markdown(pdf_display, unsafe_allow_html=True)
+
 def analyze_content(user_query, image_bytes=None, text_context=None):
-    """Uniwersalna funkcja analizy: obraz lub tekst"""
-    messages = []
-    
     if image_bytes:
         base64_img = base64.b64encode(image_bytes).decode('utf-8')
-        messages = [{
-            "role": "user",
-            "content": [
-                {"type": "text", "text": user_query},
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_img}"}}
-            ]
-        }]
-        model_name = "gpt-4o"
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=[{"role": "user", "content": [{"type": "text", "text": user_query}, {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_img}"}}]}]
+        )
     else:
-        prompt = f"Użyj tych notatek jako źródła: {text_context[:15000]}\n\nPytanie: {user_query}" if text_context else user_query
-        messages = [{"role": "user", "content": prompt}]
-        model_name = "gpt-4o-mini"
-
-    response = client.chat.completions.create(model=model_name, messages=messages)
+        prompt = f"Notatki: {text_context[:15000]}\n\nPytanie: {user_query}" if text_context else user_query
+        response = client.chat.completions.create(model="gpt-4o-mini", messages=[{"role": "user", "content": prompt}])
     return response.choices[0].message.content
 
-def get_categories():
-    try:
-        contents = repo.get_contents("baza_wiedzy")
-        return [c.name for c in contents if c.type == "dir"]
-    except: return []
-
-def get_files_in_category(category):
-    try:
-        contents = repo.get_contents(f"baza_wiedzy/{category}")
-        return [c.name for c in contents if c.name != ".keep"]
-    except: return []
-
-def download_and_read_pdf(category, filename):
-    file_content = repo.get_contents(f"baza_wiedzy/{category}/{filename}")
-    pdf_bytes = file_content.decoded_content
-    pdf = PdfReader(BytesIO(pdf_bytes))
-    return "".join([page.extract_text() for page in pdf.pages])
-
-# --- 4. PANEL BOCZNY (TWOJA BIBLIOTEKA) ---
+# --- 4. PANEL BOCZNY (BIBLIOTEKA) ---
 with st.sidebar:
     st.title("📂 Biblioteka")
     
@@ -85,21 +63,28 @@ with st.sidebar:
     st.markdown("---")
     
     # Wybór kategorii i PLIKU
-    cats = get_categories()
+    contents = repo.get_contents("baza_wiedzy")
+    cats = [c.name for c in contents if c.type == "dir"]
     selected_cat = st.selectbox("Wybierz przedmiot:", ["---"] + cats)
     
     library_context = ""
+    current_pdf_bytes = None
+    
     if selected_cat != "---":
-        files = get_files_in_category(selected_cat)
+        f_contents = repo.get_contents(f"baza_wiedzy/{selected_cat}")
+        files = [c.name for c in f_contents if c.name != ".keep"]
         selected_file = st.selectbox("Wybierz plik z bazy:", ["Brak / Nowy"] + files)
         
         if selected_file != "Brak / Nowy":
-            with st.spinner("Wczytuję plik z bazy..."):
-                library_context = download_and_read_pdf(selected_cat, selected_file)
+            with st.spinner("Wczytuję plik..."):
+                file_data = repo.get_contents(f"baza_wiedzy/{selected_cat}/{selected_file}")
+                current_pdf_bytes = file_data.decoded_content
+                pdf = PdfReader(BytesIO(current_pdf_bytes))
+                library_context = "".join([page.extract_text() for page in pdf.pages])
                 st.success(f"Wczytano: {selected_file}")
 
         st.markdown("---")
-        st.subheader("📤 Dodaj nowy plik")
+        st.subheader("📤 Dodaj nowy PDF")
         up_pdf = st.file_uploader("Wgraj PDF", type=['pdf'])
         if up_pdf and st.button("Zapisz na GitHub"):
             repo.create_file(f"baza_wiedzy/{selected_cat}/{up_pdf.name}", "add", up_pdf.getvalue())
@@ -109,33 +94,32 @@ with st.sidebar:
 # --- 5. GŁÓWNY EKRAN ---
 st.title("🧠 Inteligentna nauka")
 
-# Obsługa schowka
-pasted_file = st.file_uploader("Wklej zrzut ekranu (Ctrl+V):", type=['png', 'jpg', 'jpeg'])
-custom_question = st.text_input("Wpisz pytanie tekstowe:")
+# Tworzymy dwie zakładki: jedna do pytań, druga do przeglądania pliku
+tab_pytania, tab_podglad = st.tabs(["❓ Zadaj pytanie", "📖 Podgląd dokumentu"])
 
-# LOGIKA ANALIZY (Poprawiona)
-if st.button("Zapytaj AI") or pasted_file:
-    # 1. Priorytet: Pytanie do obrazka ze schowka
-    if pasted_file:
-        query = custom_question if custom_question else "Rozwiąż zadanie ze zdjęcia."
-        with st.spinner("Analizuję obrazek..."):
+with tab_pytania:
+    pasted_file = st.file_uploader("Wklej zrzut ekranu (Ctrl+V):", type=['png', 'jpg', 'jpeg'])
+    custom_question = st.text_input("Wpisz pytanie tekstowe:")
+
+    if st.button("Zapytaj AI") or pasted_file:
+        if pasted_file:
+            query = custom_question if custom_question else "Rozwiąż zadanie ze zdjęcia."
             wynik = analyze_content(query, image_bytes=pasted_file.getvalue())
-    
-    # 2. Pytanie tekstowe (do pliku z bazy lub ogólne)
-    elif custom_question:
-        with st.spinner("Przeszukuję bazę wiedzy..."):
+        elif custom_question:
             wynik = analyze_content(custom_question, text_context=library_context)
-    
+        else:
+            st.warning("Wklej obrazek lub wpisz pytanie!")
+            st.stop()
+
+        st.subheader("📝 Odpowiedź:")
+        st.write(wynik)
+        tts = gTTS(text=wynik, lang='pl')
+        tts.save("voice.mp3")
+        st.audio("voice.mp3")
+
+with tab_podglad:
+    if current_pdf_bytes:
+        st.subheader(f"Przeglądasz: {selected_file}")
+        display_pdf_preview(current_pdf_bytes)
     else:
-        st.warning("Wklej obrazek lub wpisz pytanie!")
-        st.stop()
-
-    # Wyświetlanie wyniku
-    st.subheader("📝 Odpowiedź:")
-    st.write(wynik)
-    tts = gTTS(text=wynik, lang='pl')
-    tts.save("voice.mp3")
-    st.audio("voice.mp3")
-
-elif not pasted_file and not custom_question:
-    st.info("Wklej zrzut ekranu lub wybierz plik z bazy po lewej i wpisz pytanie.")
+        st.info("Wybierz plik z biblioteki po lewej stronie, aby zobaczyć podgląd.")
