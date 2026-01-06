@@ -6,6 +6,8 @@ import os
 import base64
 from PyPDF2 import PdfReader
 from io import BytesIO
+import fitz  # To jest PyMuPDF
+from PIL import Image
 
 # --- 1. LOGOWANIE ---
 if "auth" not in st.session_state:
@@ -30,23 +32,23 @@ st.set_page_config(page_title="Inteligentna nauka", layout="wide")
 
 # --- 3. FUNKCJE POMOCNICZE ---
 
+def display_pdf_as_images(pdf_bytes):
+    """Przerabia PDF na obrazy i wyświetla je w kolumnie"""
+    try:
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        for page_num in range(len(doc)):
+            page = doc.load_page(page_num)
+            pix = page.get_pixmap(matrix=fitz.Matrix(2, 2)) # Wyższa jakość
+            img_data = pix.tobytes("png")
+            st.image(img_data, caption=f"Strona {page_num + 1}", use_container_width=True)
+    except Exception as e:
+        st.error(f"Błąd generowania podglądu: {e}")
+
 def get_saved_notes(category, original_file):
-    """Pobiera zapisane notatki tekstowe z GitHuba"""
     notes_path = f"baza_wiedzy/{category}/{original_file.replace('.pdf', '')}_notatki.txt"
     try:
         return repo.get_contents(notes_path).decoded_content.decode()
-    except:
-        return ""
-
-def display_pdf_robust(pdf_bytes, file_name):
-    """Najstabilniejsza metoda wyświetlania PDF w Streamlit"""
-    base64_pdf = base64.b64encode(pdf_bytes).decode('utf-8')
-    # Link "ratunkowy" do otwarcia w nowej karcie
-    st.markdown(f'<a href="data:application/pdf;base64,{base64_pdf}" target="_blank" style="text-decoration:none;"><button style="width:100%; border-radius:5px; background-color:#4CAF50; color:white; padding:10px; border:none; cursor:pointer;">📂 Otwórz PDF w pełnym oknie (jeśli podgląd poniżej jest pusty)</button></a>', unsafe_allow_html=True)
-    
-    # Ramka podglądu
-    pdf_display = f'<iframe src="data:application/pdf;base64,{base64_pdf}" width="100%" height="800" type="application/pdf"></iframe>'
-    st.components.v1.html(pdf_display, height=800)
+    except: return ""
 
 def analyze_content(user_query, image_bytes=None, text_context=None):
     if image_bytes:
@@ -113,23 +115,28 @@ with col1:
 
 with col2:
     if current_pdf_bytes:
-        st.subheader(f"📖 {selected_file}")
-        display_pdf_robust(current_pdf_bytes, selected_file)
+        st.subheader(f"📖 Podgląd: {selected_file}")
+        
+        # PRZYCISK POBIERANIA (zawsze działa jako fallback)
+        st.download_button(label="📥 Pobierz plik na dysk", data=current_pdf_bytes, file_name=selected_file, mime="application/pdf")
+        
+        # NOWY PODGLĄD OBRAZOWY (zamiast iframe)
+        st.markdown("---")
+        with st.container(height=600):
+            display_pdf_as_images(current_pdf_bytes)
         
         st.markdown("---")
-        st.subheader("📝 Twoje notatki do tego pliku")
-        
-        # Wczytujemy notatki z bazy
+        st.subheader("📝 Twoje notatki")
         saved_text = get_saved_notes(selected_cat, selected_file)
-        user_notes = st.text_area("Pisz tutaj (zostaną zapisane na stałe):", value=saved_text, height=250)
+        user_notes = st.text_area("Pisz tutaj:", value=saved_text, height=250)
         
-        if st.button("Zapisz notatki na GitHubie"):
+        if st.button("Zapisz notatki"):
             notes_path = f"baza_wiedzy/{selected_cat}/{selected_file.replace('.pdf', '')}_notatki.txt"
             try:
                 old = repo.get_contents(notes_path)
-                repo.update_file(notes_path, "update notes", user_notes, old.sha)
+                repo.update_file(notes_path, "update", user_notes, old.sha)
             except:
-                repo.create_file(notes_path, "create notes", user_notes)
+                repo.create_file(notes_path, "create", user_notes)
             st.success("Notatki zapisane!")
     else:
         st.info("Wybierz plik z biblioteki po lewej.")
