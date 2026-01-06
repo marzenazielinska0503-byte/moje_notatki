@@ -5,3 +5,4 @@ gTTS
 PyPDF2
 pymupdf
 Pillow
+requests
