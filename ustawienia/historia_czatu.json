@@ -25,5 +25,14 @@
     "role": "assistant",
     "content": "Odpowiedź: A\n\nWyjaśnienie: Psychologia to nauka zajmująca się badaniem zachowań, emocji i procesów myślowych ludzi. Analizuje, w jaki sposób myślimy, czujemy i działamy w różnych sytuacjach, a także jak nasze doświadczenia i środowisko wpływają na nasze funkcjonowanie psychiczne. Psychologia wykorzystuje różnorodne metody badawcze, aby zdobywać wiedzę na temat indywidualnych oraz społecznych aspektów życia człowieka, co pozwala na lepsze zrozumienie ludzkiego działania.",
     "source_text": "Analiza wizualna strony."
+  },
+  {
+    "role": "user",
+    "content": "Rozwiąż zadanie konkretnie."
+  },
+  {
+    "role": "assistant",
+    "content": "Odpowiedź: Konfliktowym\n\nWyjaśnienie: Egocentryczne nastawienie dziecka, które stawia opór, najlepiej pasuje do koncepcji konfliktowej w modelu, ponieważ objawia się w napięciach między jego potrzebami a oczekiwaniami otoczenia. Inne opcje, takie jak \"Zupełnej swobody\" czy \"Nadmiernej ochrony\", nie oddają tego konfliktu w wystarczający sposób.",
+    "source_text": "Analiza wizualna strony."
   }
 ]
