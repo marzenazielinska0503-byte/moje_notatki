@@ -16,5 +16,14 @@
     "role": "assistant",
     "content": "Odpowiedź: Styl rodzicielski\n\nWyjaśnienie: W kontekście postaw i stylów związanych z wychowaniem dzieci, \"styl rodzicielski\" odnosi się do specyficznego sposobu, w jaki rodzice zachowują się w stosunku do swoich dzieci. Termin ten wskazuje na tendencję do określonych metod wychowawczych, które rodzice przyjmują w kontaktach z dziećmi.",
     "source_text": "Analiza wizualna strony."
+  },
+  {
+    "role": "user",
+    "content": "Co to jest psychologia?"
+  },
+  {
+    "role": "assistant",
+    "content": "Odpowiedź: A\n\nWyjaśnienie: Psychologia to nauka zajmująca się badaniem zachowań, emocji i procesów myślowych ludzi. Analizuje, w jaki sposób myślimy, czujemy i działamy w różnych sytuacjach, a także jak nasze doświadczenia i środowisko wpływają na nasze funkcjonowanie psychiczne. Psychologia wykorzystuje różnorodne metody badawcze, aby zdobywać wiedzę na temat indywidualnych oraz społecznych aspektów życia człowieka, co pozwala na lepsze zrozumienie ludzkiego działania.",
+    "source_text": "Analiza wizualna strony."
   }
 ]
