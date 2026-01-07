@@ -34,5 +34,14 @@
     "role": "assistant",
     "content": "Odpowiedź: Konfliktowym\n\nWyjaśnienie: Egocentryczne nastawienie dziecka, które stawia opór, najlepiej pasuje do koncepcji konfliktowej w modelu, ponieważ objawia się w napięciach między jego potrzebami a oczekiwaniami otoczenia. Inne opcje, takie jak \"Zupełnej swobody\" czy \"Nadmiernej ochrony\", nie oddają tego konfliktu w wystarczający sposób.",
     "source_text": "Analiza wizualna strony."
+  },
+  {
+    "role": "user",
+    "content": "Co to jest nauczanie?"
+  },
+  {
+    "role": "assistant",
+    "content": "Odpowiedź: A\n\nWyjaśnienie: Nauczanie to proces przekazywania wiedzy, umiejętności oraz wartości jednej osobie (uczniowi) przez inną osobę (nauczyciela). Ma na celu rozwijanie zdolności ucznia oraz wspieranie jego rozwoju intelektualnego, emocjonalnego i społecznego. Nauczanie może odbywać się w różnych formach, takich jak tradycyjne lekcje, zajęcia praktyczne, metody projektowe czy e-learning. Kluczowymi elementami nauczania są komunikacja, interakcja oraz dostosowywanie metod dydaktycznych do potrzeb uczniów.",
+    "source_text": "Analiza wizualna strony."
   }
 ]
