@@ -69,5 +69,13 @@
   {
     "role": "assistant",
     "content": "Tak, mogę pomóc w interpretacji kart tarota oraz w zrozumieniu ich znaczenia i symboliki. Chociaż nie jestem fizycznie w stanie tasować lub rozsypywać kart, mogę przeprowadzić wirtualną sesję tarota, przedstawiając karty oraz ich interpretacje. Mogę także pomóc w formułowaniu pytań lub zagadnień, które chciałbyś bawić się w kontekście tarota. Jak chciałbyś, abym Ci pomógł?"
+  },
+  {
+    "role": "user",
+    "content": "Zrób notatkę na podstawie zdjęcia"
+  },
+  {
+    "role": "assistant",
+    "content": "Na zdjęciu znajduje się fragment tekstu omawiającego rozwój terapii poznawczo-behawioralnej (CBT) oraz różne podejścia do tego typu terapii. Kluczowe punkty notatki to:\n\n1. **Rozszerzenia w CBT**: Tekst wskazuje, że różne rozszerzenia w terapii nie są jedynie nowinkami, lecz opierają się na specyficznych przypadkach i terapiach, które są dostosowane do indywidualnych potrzeb pacjentów.\n\n2. **Różnorodność podejść**: Zawiera informacje o różnych podejściach do terapii, które mogą wpływać na efektywność, takie jak różnice w traktowaniu pacjentów oraz różne modele terapeutyczne.\n\n3. **Historia i ewolucja**: Wspomniano o postaciach takich jak Aaron Beck i jego wkład w rozwój tego podejścia, a także o badaniach związanych z efektywnością CBT.\n\n4. **Zastosowanie w Polsce**: Tekst odnosi się również do wprowadzenia terapii poznawczo-behawioralnej w Polsce oraz organizacji zajmujących się jej popularyzacją, w tym Polskiego Towarzystwa Terapii Poznawczo-Behawioralnej.\n\n5. **Edukacja i ułatwienia**: Podkreślono znaczenie certyfikacji oraz edukacji w terapii, aby zapewnić skuteczność terapii i poprawić doświadczenia terapeutyczne.\n\nCałość tekstu wskazuje na rosnącą adaptację i rozwój terapii CBT w różnych kontekstach oraz potrzeby dalszego badania i szkolenia w tej dziedzinie."
   }
 ]
