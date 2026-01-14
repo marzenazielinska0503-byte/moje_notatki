@@ -30,7 +30,6 @@ g = Github(st.secrets["GITHUB_TOKEN"])
 repo = g.get_repo("marzenazielinska0503-byte/moje_notatki")
 st.set_page_config(page_title="Inteligentna nauka", layout="wide")
 
-# Licznik resetujący pola wejściowe
 if "input_counter" not in st.session_state:
     st.session_state.input_counter = 0
 
@@ -52,7 +51,6 @@ def load_history_from_github():
 if "messages" not in st.session_state:
     st.session_state.messages = load_history_from_github()
 if "pdf_page" not in st.session_state: st.session_state.pdf_page = 0
-if "last_file" not in st.session_state: st.session_state.last_file = ""
 
 @st.cache_data(show_spinner=False)
 def fetch_pdf_bytes(path):
@@ -77,61 +75,64 @@ def get_premium_audio(text, voice, speed):
 
 # --- 3. PANEL BOCZNY ---
 with st.sidebar:
-    st.title("📂 Zarządzanie")
+    st.title("⚙️ Ustawienia")
     
-    st.subheader("🆕 Nowy przedmiot")
-    new_sub = st.text_input("Nazwa:")
-    if st.button("Utwórz folder"):
-        if new_sub:
-            repo.create_file(f"baza_wiedzy/{new_sub}/.keep", "init", "")
-            st.success("Dodano!")
-            st.rerun()
+    # --- NOWOŚĆ: WYBÓR TRYBU ---
+    app_mode = st.radio("Tryb pracy AI:", ["Baza Wiedzy 📚", "Ogólny ChatGPT 🤖"])
     st.markdown("---")
 
-    st.subheader("📜 Archiwum pytań")
-    if st.session_state.messages:
-        for i in range(len(st.session_state.messages)-1, 0, -1):
-            msg = st.session_state.messages[i]
-            if msg["role"] == "assistant":
-                user_q = st.session_state.messages[i-1]
-                with st.expander(f"💬 {user_q['content'][:25]}..."):
-                    st.write(f"**P:** {user_q['content']}")
-                    st.write(f"**O:** {msg['content']}")
-
-    if st.button("🗑️ Wyczyść historię"):
-        st.session_state.messages = []
-        save_history_to_github([])
-        st.rerun()
+    if app_mode == "Baza Wiedzy 📚":
+        st.subheader("📂 Zarządzanie plikami")
+        st.subheader("🆕 Nowy przedmiot")
+        new_sub = st.text_input("Nazwa folderu:")
+        if st.button("Utwórz folder"):
+            if new_sub:
+                repo.create_file(f"baza_wiedzy/{new_sub}/.keep", "init", "")
+                st.success("Dodano!")
+                st.rerun()
+        
+        cats = [c.name for c in repo.get_contents("baza_wiedzy") if c.type == "dir"]
+        selected_cat = st.selectbox("Wybierz przedmiot:", ["---"] + cats)
+        
+        current_pdf_bytes, text_map = None, {}
+        if selected_cat != "---":
+            files = [c.name for c in repo.get_contents(f"baza_wiedzy/{selected_cat}") if c.name.endswith('.pdf')]
+            selected_file = st.selectbox("Wybierz plik:", ["Brak"] + files)
+            if selected_file != "Brak":
+                current_pdf_bytes = fetch_pdf_bytes(f"baza_wiedzy/{selected_cat}/{selected_file}")
+                text_map = get_pdf_text_map(current_pdf_bytes)
+                
+            up_new = st.file_uploader("Wgraj PDF do tego folderu", type=['pdf'])
+            if up_new and st.button("Wyślij do bazy"):
+                repo.create_file(f"baza_wiedzy/{selected_cat}/{up_new.name}", "add", up_new.getvalue())
+                st.success("Zapisano!")
+    else:
+        st.info("💡 Tryb Ogólny: AI nie widzi Twoich notatek, ale możesz swobodnie rozmawiać i przesyłać zdjęcia.")
+        current_pdf_bytes, text_map = None, {}
 
     st.markdown("---")
     st.subheader("🎙️ Ustawienia głosu")
     v_voice = st.selectbox("Lektor:", ["nova", "shimmer", "alloy", "onyx"])
     v_speed = st.slider("Szybkość:", 0.5, 2.0, 1.0, 0.1)
-    
+
     st.markdown("---")
-    cats = [c.name for c in repo.get_contents("baza_wiedzy") if c.type == "dir"]
-    selected_cat = st.selectbox("Wybierz przedmiot:", ["---"] + cats)
-    
-    current_pdf_bytes, text_map = None, {}
-    if selected_cat != "---":
-        files = [c.name for c in repo.get_contents(f"baza_wiedzy/{selected_cat}") if c.name.endswith('.pdf')]
-        selected_file = st.selectbox("Wybierz plik:", ["Brak"] + files)
-        if selected_file != "Brak":
-            current_pdf_bytes = fetch_pdf_bytes(f"baza_wiedzy/{selected_cat}/{selected_file}")
-            text_map = get_pdf_text_map(current_pdf_bytes)
-            
-        up_new = st.file_uploader("Wgraj PDF", type=['pdf'])
-        if up_new and st.button("Wyślij do bazy"):
-            repo.create_file(f"baza_wiedzy/{selected_cat}/{up_new.name}", "add", up_new.getvalue())
-            st.success("Zapisano!")
+    st.subheader("📜 Archiwum")
+    if st.button("🗑️ Wyczyść historię"):
+        st.session_state.messages = []
+        save_history_to_github([])
+        st.rerun()
 
 # --- 4. GŁÓWNY EKRAN ---
-st.title("🧠 Inteligentna nauka")
-col1, col2 = st.columns([1, 1.2])
+st.title(f"🧠 {app_mode}")
+
+if app_mode == "Baza Wiedzy 📚":
+    col1, col2 = st.columns([1, 1.2])
+else:
+    col1, col2 = st.columns([1, 0.01]) # Schowaj drugą kolumnę w trybie ogólnym
 
 with col1:
-    st.subheader("💬 Czat (Wybierz formę pytania)")
-    chat_box = st.container(height=350)
+    st.subheader("💬 Czat")
+    chat_box = st.container(height=400)
     with chat_box:
         for msg in st.session_state.messages:
             with st.chat_message(msg["role"]):
@@ -140,59 +141,72 @@ with col1:
                     with st.expander("📖 Zobacz tekst źródłowy"):
                         st.write(msg["source_text"])
 
-    # POLA WEJŚCIOWE Z DYNAMICZNYM KLUCZEM (Resetują się po pytaniu)
-    pasted_img = st.file_uploader("Wklej obraz (Ctrl+V):", type=['png', 'jpg', 'jpeg'], key=f"img_{st.session_state.input_counter}")
-    audio_q = st.audio_input("🎤 Zadaj pytanie głosem:", key=f"voice_{st.session_state.input_counter}")
-    text_q = st.text_input("Lub wpisz pytanie tutaj:", key=f"txt_{st.session_state.input_counter}")
+    pasted_img = st.file_uploader("Dodaj obraz (np. zadanie):", type=['png', 'jpg', 'jpeg'], key=f"img_{st.session_state.input_counter}")
+    audio_q = st.audio_input("Zadaj pytanie głosem:", key=f"voice_{st.session_state.input_counter}")
+    text_q = st.text_input("Wpisz pytanie:", key=f"txt_{st.session_state.input_counter}")
     
-    if st.button("🚀 Wyślij zapytanie do AI"):
+    if st.button("🚀 Wyślij do AI"):
         with st.spinner("Analiza..."):
-            # 1. Przetwarzanie głosu
             v_text = ""
             if audio_q:
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
                     f.write(audio_q.getvalue()); f_path = f.name
                 v_text = client.audio.transcriptions.create(model="whisper-1", file=open(f_path, "rb")).text
             
-            # 2. Ustalenie treści pytania
-            final_q = text_q if text_q else (v_text if v_text else "Rozwiąż zadanie konkretnie.")
-            
-            # 3. System Prompt: Krótka odpowiedź + Opis
-            system_msg = (
-                "Przy testach podaj krótką odpowiedź na górze (np. 'Odpowiedź: A'). "
-                "Poniżej dodaj nagłówek 'Wyjaśnienie:' i rozwiń opis. IGNORUJ kolory na zdjęciach. Zawsze dodaj [ID:X]."
-            )
-            
-            ctx_text = "\n".join([f"[ID:{i}]: {t}" for i, t in text_map.items() if t])
+            final_q = text_q if text_q else (v_text if v_text else "Analizuj przesłane dane.")
+
+            # --- DYNAMIZACJA PROMPTU W ZALEŻNOŚCI OD TRYBU ---
+            if app_mode == "Baza Wiedzy 📚":
+                system_msg = (
+                    "Jesteś asystentem naukowym. Korzystaj z NOTATEK. "
+                    "Podaj krótką odpowiedź na górze (np. 'Odpowiedź: A'). "
+                    "Poniżej dodaj nagłówek 'Wyjaśnienie:'. Zawsze dodaj tag [ID:X] wskazujący numer strony."
+                )
+                ctx_text = "\n".join([f"[ID:{i}]: {t}" for i, t in text_map.items() if t])
+                user_prompt = f"NOTATKI: {ctx_text[:12000]}\n\nZADANIE: {final_q}"
+            else:
+                system_msg = "Jesteś pomocnym asystentem GPT. Odpowiadaj wyczerpująco i pomocnie."
+                user_prompt = final_q
+
             msgs = [{"role": "system", "content": system_msg},
-                    {"role": "user", "content": [{"type": "text", "text": f"NOTATKI: {ctx_text[:12000]}\n\nZADANIE: {final_q}"}]}]
+                    {"role": "user", "content": [{"type": "text", "text": user_prompt}]}]
             
             if pasted_img:
                 b64 = base64.b64encode(pasted_img.getvalue()).decode()
                 msgs[1]["content"].append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}})
 
-            res = client.chat.completions.create(model="gpt-4o-mini", messages=msgs).choices[0].message.content
+            res_obj = client.chat.completions.create(model="gpt-4o-mini", messages=msgs)
+            res = res_obj.choices[0].message.content
             
-            # 4. Obsługa odpowiedzi i strony
-            m = re.search(r"\[ID:(\d+)\]", res)
-            source_p = int(m.group(1)) if m else st.session_state.pdf_page
-            if m: st.session_state.pdf_page = source_p
+            # Obsługa strony PDF (tylko w trybie bazy wiedzy)
+            source_p = st.session_state.pdf_page
+            if app_mode == "Baza Wiedzy 📚":
+                m = re.search(r"\[ID:(\d+)\]", res)
+                if m: 
+                    source_p = int(m.group(1))
+                    st.session_state.pdf_page = source_p
             
             clean_res = re.sub(r"\[ID:\d+\]", "", res).strip()
+            
+            # Zapis do historii
+            new_msg = {"role": "assistant", "content": clean_res}
+            if app_mode == "Baza Wiedzy 📚":
+                new_msg["source_text"] = text_map.get(source_p, "Analiza wizualna.")
+            
             st.session_state.messages.append({"role": "user", "content": final_q})
-            st.session_state.messages.append({"role": "assistant", "content": clean_res, "source_text": text_map.get(source_p, "Analiza wizualna strony.")})
+            st.session_state.messages.append(new_msg)
             save_history_to_github(st.session_state.messages)
             
-            # 5. Lektor i CZYSZCZENIE PÓL
+            # Lektor
             audio_ans = get_premium_audio(clean_res, v_voice, v_speed)
             if audio_ans: st.audio(audio_ans, autoplay=True)
             
-            st.session_state.input_counter += 1 # To powoduje reset wszystkich widgetów
+            st.session_state.input_counter += 1
             st.rerun()
 
 with col2:
-    if current_pdf_bytes:
-        st.subheader(f"📖 Strona {st.session_state.pdf_page + 1}")
+    if app_mode == "Baza Wiedzy 📚" and current_pdf_bytes:
+        st.subheader(f"📖 Podgląd: Strona {st.session_state.pdf_page + 1}")
         c1, c2, c3 = st.columns([1, 1, 1])
         with c1:
             if st.button("⬅️") and st.session_state.pdf_page > 0:
