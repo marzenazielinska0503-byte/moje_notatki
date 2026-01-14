@@ -52,5 +52,14 @@
     "role": "assistant",
     "content": "Odpowiedź: Psychologia to nauka o zachowaniu i procesach umysłowych.\n\nWyjaśnienie: Psychologia bada odpowiedzi ludzi i zwierząt na różnorodne bodźce, analizując takie aspekty, jak myślenie, emocje, percepcja, osobowość oraz interakcje międzyludzkie. Można ją podzielić na różne gałęzie, takie jak psychologia kliniczna, społeczna, rozwojowa czy behawioralna, a także stosuje różne metody badawcze w celu zrozumienia mechanizmów rządzących zachowaniem.",
     "source_text": "Analiza wizualna strony."
+  },
+  {
+    "role": "user",
+    "content": "Rozwiąż zadanie konkretnie."
+  },
+  {
+    "role": "assistant",
+    "content": "Odpowiedź: Proszę podać konkretne zadanie do rozwiązania.\n\nWyjaśnienie: Aby rozwiązać jakiekolwiek zadanie, potrzebuję jego treści i szczegółowych informacji dotyczących wymagań. Proszę opisać, co dokładnie mam rozwiązać.",
+    "source_text": "Analiza wizualna strony."
   }
 ]
