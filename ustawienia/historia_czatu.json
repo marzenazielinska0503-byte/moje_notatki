@@ -61,5 +61,13 @@
     "role": "assistant",
     "content": "Odpowiedź: Proszę podać konkretne zadanie do rozwiązania.\n\nWyjaśnienie: Aby rozwiązać jakiekolwiek zadanie, potrzebuję jego treści i szczegółowych informacji dotyczących wymagań. Proszę opisać, co dokładnie mam rozwiązać.",
     "source_text": "Analiza wizualna strony."
+  },
+  {
+    "role": "user",
+    "content": "Umiesz stawiać tarota?"
+  },
+  {
+    "role": "assistant",
+    "content": "Tak, mogę pomóc w interpretacji kart tarota oraz w zrozumieniu ich znaczenia i symboliki. Chociaż nie jestem fizycznie w stanie tasować lub rozsypywać kart, mogę przeprowadzić wirtualną sesję tarota, przedstawiając karty oraz ich interpretacje. Mogę także pomóc w formułowaniu pytań lub zagadnień, które chciałbyś bawić się w kontekście tarota. Jak chciałbyś, abym Ci pomógł?"
   }
 ]
