@@ -43,5 +43,14 @@
     "role": "assistant",
     "content": "Odpowiedź: A\n\nWyjaśnienie: Nauczanie to proces przekazywania wiedzy, umiejętności oraz wartości jednej osobie (uczniowi) przez inną osobę (nauczyciela). Ma na celu rozwijanie zdolności ucznia oraz wspieranie jego rozwoju intelektualnego, emocjonalnego i społecznego. Nauczanie może odbywać się w różnych formach, takich jak tradycyjne lekcje, zajęcia praktyczne, metody projektowe czy e-learning. Kluczowymi elementami nauczania są komunikacja, interakcja oraz dostosowywanie metod dydaktycznych do potrzeb uczniów.",
     "source_text": "Analiza wizualna strony."
+  },
+  {
+    "role": "user",
+    "content": "Teraz zadaję pytanie, co to jest psychologia?"
+  },
+  {
+    "role": "assistant",
+    "content": "Odpowiedź: Psychologia to nauka o zachowaniu i procesach umysłowych.\n\nWyjaśnienie: Psychologia bada odpowiedzi ludzi i zwierząt na różnorodne bodźce, analizując takie aspekty, jak myślenie, emocje, percepcja, osobowość oraz interakcje międzyludzkie. Można ją podzielić na różne gałęzie, takie jak psychologia kliniczna, społeczna, rozwojowa czy behawioralna, a także stosuje różne metody badawcze w celu zrozumienia mechanizmów rządzących zachowaniem.",
+    "source_text": "Analiza wizualna strony."
   }
 ]
