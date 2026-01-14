@@ -1,4 +1,4 @@
-import streamlit as st
+Jest taki kod: import streamlit as st
 from openai import OpenAI
 from github import Github
 import os
