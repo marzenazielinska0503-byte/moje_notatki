@@ -43,5 +43,14 @@
     "role": "assistant",
     "content": "Odpowiedź: A\n\nWyjaśnienie: \nAby zdefiniować klasę `Produkt` w Pythonie, należy użyć słowa kluczowego `class`, a następnie zdefiniować konstruktor `__init__`, który przyjmuje parametry: `nazwa`, `cena` i `kategoria`. Po utworzeniu obiektu klasy, atrybuty można drukować, odwołując się do nich przez nazwę obiektu.\n\nOto przykładowa implementacja:\n\n```python\nclass Produkt:\n    def __init__(self, nazwa, cena, kategoria):\n        self.nazwa = nazwa\n        self.cena = cena\n        self.kategoria = kategoria\n\n# Tworzenie obiektu klasy Produkt\nprodukt1 = Produkt(\"Laptop\", 3000, \"Elektronika\")\n\n# Wydruk atrybutów\nprint(produkt1.nazwa)\nprint(produkt1.cena)\nprint(produkt1.kategoria)\n```\n\nTen kod utworzy obiekt `produkt1` i wydrukuje nazwę, cenę oraz kategorię na osobnych liniach.",
     "source_text": "Analiza wizualna strony."
+  },
+  {
+    "role": "user",
+    "content": " Stwórz klasę bazową Pracownik z atrybutami imie i stawka_godzinowa. Dodaj metodę # oblicz_pensje(liczba_godzin). Następnie stwórz klasę potomną Programista, która # dziedziczy po Pracownik. W klasie Programista dodaj atrybut jezyki_programowania (lista # stringów). Stwórz obiekt klasy Programista i wywołaj na nim metodę oblicz_pensje"
+  },
+  {
+    "role": "assistant",
+    "content": "Odpowiedź: A\n\nWyjaśnienie:\nStworzymy klasę `Pracownik` z atrybutami `imie` oraz `stawka_godzinowa`. Następnie dodamy metodę `oblicz_pensje`, która przyjmuje liczbę godzin i oblicza pensję. Klasa `Programista` będzie dziedziczyć po klasie `Pracownik` i dodatkowo posiadać atrybut `jezyki_programowania`, który będzie listą stringów. Na końcu stworzymy obiekt klasy `Programista` i wywołamy na nim metodę `oblicz_pensje`.\n\nOto przykładowa implementacja:\n\n```python\nclass Pracownik:\n    def __init__(self, imie, stawka_godzinowa):\n        self.imie = imie\n        self.stawka_godzinowa = stawka_godzinowa\n\n    def oblicz_pensje(self, liczba_godzin):\n        return self.stawka_godzinowa * liczba_godzin\n\nclass Programista(Pracownik):\n    def __init__(self, imie, stawka_godzinowa, jezyki_programowania):\n        super().__init__(imie, stawka_godzinowa)\n        self.jezyki_programowania = jezyki_programowania\n\n# Utworzenie obiektu klasy Programista\nprogramista = Programista(\"Jan Kowalski\", 50, [\"Python\", \"JavaScript\"])\n\n# Wywołanie metody oblicz_pensje\npensja = programista.oblicz_pensje(160)  # załóżmy, że przepracował 160 godzin\nprint(f'Pensja programisty {programista.imie}: {pensja}')\n```\n\nW tym kodzie:\n- Klasa `Pracownik` zawiera metodę do obliczania pensji.\n- Klasa `Programista` rozszerza jej funkcjonalność, dodając atrybut dotyczący języków programowania.\n- Tworzymy instancję programisty i obliczamy pensję na podstawie przepracowanych godzin.",
+    "source_text": "Analiza wizualna strony."
   }
 ]
