@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "role": "user",
+    "content": "Stwórz klasę Punkt do reprezentowania punktu w 2D, z atrybutami x i y. Zaimplementuj metodę str, aby print(punkt) wyświetlał współrzędne w formacie (x, y)."
+  },
+  {
+    "role": "assistant",
+    "content": "Odpowiedź: A\n\n```python\nclass Punkt:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n    \n    def __str__(self):\n        return f\"({self.x}, {self.y})\"\n\n# Przykładowe użycie\npunkt = Punkt(3, 5)\nprint(punkt)  # >> (3, 5)\n```\n\nWyjaśnienie:\nStworzyliśmy klasę `Punkt`, która przyjmuje dwa atrybuty `x` i `y`, reprezentujące współrzędne punktu w układzie 2D. Metoda `__str__` została nadpisana, aby umożliwić czytelne wyświetlanie wartości punktu w formacie `(x, y)` podczas wywołania funkcji `print()`. Dzięki temu możemy łatwo zobaczyć współrzędne punktu.",
+    "source_text": "Lekcja 12: Wprowadzenie do Programowania\nObiektowego (OOP)\n#lekcja  #python  #oop  #klasy  #obiekty  #programowanie_obiektowe\nWitaj w ósmej lekcji! Do tej pory poznaliśmy programowanie strukturalne i funkcyjne. Dziś\nzrobimy kolejny duży krok i wejdziemy w świat programowania zorientowanego obiektowo\n(OOP). Jest to paradygmat, czyli sposób myślenia o programowaniu i strukturyzowania kodu,\nktóry pozwala modelować byty ze świata rzeczywistego w formie obiektów. Dzięki temu kod\nstaje się bardziej zorganizowany, elastyczny i łatwiejszy w zarządzaniu, zwłaszcza w dużych\nprojektach.\nW tej lekcji omówimy:\nZaczynajmy!\n1. Klasy i obiekty: Szablony i ich realizacje\nW programowaniu obiektowym wszystko kręci się wokół dwóch kluczowych pojęć: klasy i\nobiektu.\nPomyśl o tym w ten sposób:\nCzym są klasy i obiekty.\nCztery filary OOP: Enkapsulację, Abstrakcję, Dziedziczenie i Polimorfizm.\nJak dostosowywać działanie klas przez przeciążanie operatorów.\nCzym jest i do czego służy MRO (Method Resolution Order).\nDefinition\nKlasa to szablon, przepis lub plan, według którego tworzone są obiekty. Definiuje ona\nwspólny zestaw cech (nazywanych atrybutami) oraz zachowań (nazywanych metodami),\nktóre będą miały wszystkie obiekty danego typu.\nObiekt (lub instancja) to konkretny, istniejący w pamięci komputera egzemplarz stworzony\nna podstawie klasy. Posiada on wartości atrybutów zdefiniowanych w klasie.\nKlasa: PrzepisNaCiasto  – zawiera instrukcje, jakie składniki są potrzebne (atrybuty) i co z\nnimi zrobić (metody).\nObiekt: CiastoUpieczoneNaUrodziny  – konkretna realizacja przepisu, istniejące ciasto."
+  }
+]
