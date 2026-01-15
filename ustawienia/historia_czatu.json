@@ -34,5 +34,14 @@
     "role": "assistant",
     "content": "Odpowiedź: A\n\nWyjaśnienie:\nAby stworzyć klasę `Film`, która spełnia podane wymagania, można zdefiniować konstruktor przyjmujący tytuł, reżysera i rok produkcji. Klasa powinna także zawierać metodę `informacje()`, która zwróci sformatowany string z informacjami o filmie. Oto przykładowa implementacja w języku Python:\n\n```python\nclass Film:\n    def __init__(self, tytul, rezyser, rok_produkcji):\n        self.tytul = tytul\n        self.rezyser = rezyser\n        self.rok_produkcji = rok_produkcji\n\n    def informacje(self):\n        return f'\"{self.tytul}\" ({self.rok_produkcji}), reżyseria: {self.rezyser}'\n\n# Tworzenie obiektów klasy Film\nfilm1 = Film(\"Matrix\", \"Lana i Lilly Wachowski\", 1999)\nfilm2 = Film(\"Incepcja\", \"Christopher Nolan\", 2010)\n\n# Wydruk informacji o filmach\nprint(film1.informacje())\nprint(film2.informacje())\n```\n\nW powyższym kodzie stworzyliśmy klasę `Film`, zainicjalizowaliśmy dwa obiekty i wywołaliśmy metodę `informacje()`, aby uzyskać pełne informacje o filmach. Format zwracany przez metodę jest zgodny z wymaganiami.",
     "source_text": "Analiza wizualna strony."
+  },
+  {
+    "role": "user",
+    "content": "Zdefiniuj klasę Produkt z konstruktorem init przyjmującym nazwa, cena i kategoria. Stwórz obiekt tej klasy, a następnie wydrukuj każdy z jego atrybutów w osobnej linii"
+  },
+  {
+    "role": "assistant",
+    "content": "Odpowiedź: A\n\nWyjaśnienie: \nAby zdefiniować klasę `Produkt` w Pythonie, należy użyć słowa kluczowego `class`, a następnie zdefiniować konstruktor `__init__`, który przyjmuje parametry: `nazwa`, `cena` i `kategoria`. Po utworzeniu obiektu klasy, atrybuty można drukować, odwołując się do nich przez nazwę obiektu.\n\nOto przykładowa implementacja:\n\n```python\nclass Produkt:\n    def __init__(self, nazwa, cena, kategoria):\n        self.nazwa = nazwa\n        self.cena = cena\n        self.kategoria = kategoria\n\n# Tworzenie obiektu klasy Produkt\nprodukt1 = Produkt(\"Laptop\", 3000, \"Elektronika\")\n\n# Wydruk atrybutów\nprint(produkt1.nazwa)\nprint(produkt1.cena)\nprint(produkt1.kategoria)\n```\n\nTen kod utworzy obiekt `produkt1` i wydrukuje nazwę, cenę oraz kategorię na osobnych liniach.",
+    "source_text": "Analiza wizualna strony."
   }
 ]
