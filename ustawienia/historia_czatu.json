@@ -52,5 +52,14 @@
     "role": "assistant",
     "content": "Odpowiedź: A\n\nWyjaśnienie:\nStworzymy klasę `Pracownik` z atrybutami `imie` oraz `stawka_godzinowa`. Następnie dodamy metodę `oblicz_pensje`, która przyjmuje liczbę godzin i oblicza pensję. Klasa `Programista` będzie dziedziczyć po klasie `Pracownik` i dodatkowo posiadać atrybut `jezyki_programowania`, który będzie listą stringów. Na końcu stworzymy obiekt klasy `Programista` i wywołamy na nim metodę `oblicz_pensje`.\n\nOto przykładowa implementacja:\n\n```python\nclass Pracownik:\n    def __init__(self, imie, stawka_godzinowa):\n        self.imie = imie\n        self.stawka_godzinowa = stawka_godzinowa\n\n    def oblicz_pensje(self, liczba_godzin):\n        return self.stawka_godzinowa * liczba_godzin\n\nclass Programista(Pracownik):\n    def __init__(self, imie, stawka_godzinowa, jezyki_programowania):\n        super().__init__(imie, stawka_godzinowa)\n        self.jezyki_programowania = jezyki_programowania\n\n# Utworzenie obiektu klasy Programista\nprogramista = Programista(\"Jan Kowalski\", 50, [\"Python\", \"JavaScript\"])\n\n# Wywołanie metody oblicz_pensje\npensja = programista.oblicz_pensje(160)  # załóżmy, że przepracował 160 godzin\nprint(f'Pensja programisty {programista.imie}: {pensja}')\n```\n\nW tym kodzie:\n- Klasa `Pracownik` zawiera metodę do obliczania pensji.\n- Klasa `Programista` rozszerza jej funkcjonalność, dodając atrybut dotyczący języków programowania.\n- Tworzymy instancję programisty i obliczamy pensję na podstawie przepracowanych godzin.",
     "source_text": "Analiza wizualna strony."
+  },
+  {
+    "role": "user",
+    "content": "Stwórz klasę Punkt do reprezentowania punktu w 2D, z atrybutami x i y. Zaimplementuj metodę str, aby print(punkt) wyświetlał współrzędne w formacie (x, y)."
+  },
+  {
+    "role": "assistant",
+    "content": "Odpowiedź: A\n\nWyjaśnienie:\nAby stworzyć klasę `Punkt`, która będzie reprezentować punkt w układzie współrzędnych 2D, musimy zdefiniować dwa atrybuty: `x` i `y`. Następnie zaimplementujemy metodę `__str__`, aby umożliwić ładne wyświetlanie współrzędnych punktu w formacie (x, y). Poniżej znajduje się przykład implementacji tej klasy w Pythonie:\n\n```python\nclass Punkt:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n\n    def __str__(self):\n        return f\"({self.x}, {self.y})\"\n\n# Przykład użycia:\npunkt = Punkt(3, 4)\nprint(punkt)  # wyświetli (3, 4)\n```\n\nW powyższym przykładzie, klasa `Punkt` ma konstruktor inicjalizujący atrybuty `x` i `y`, a metoda `__str__` zwraca odpowiedni format współrzędnych. Dzięki temu, wywołanie `print(punkt)` zwraca współrzędne w wymaganym formacie.",
+    "source_text": "Analiza wizualna strony."
   }
 ]
