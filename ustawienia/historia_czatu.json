@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "role": "user",
+    "content": "Co to jest  abolicja?"
+  },
+  {
+    "role": "assistant",
+    "content": "Odpowiedź: D\n\nWyjaśnienie: Abolicja polega na zniesieniu karalności określonych czynów, co może mieć zastosowanie w różnych sytuacjach prawnych. Jest to instrument, który pozwala na uchwałę w sprawie rezygnacji z wszelkich konsekwencji prawnych za określone działania. Może być wprowadzona na skutek ustawodawstwa, ale nie musi być to jedyny sposób jej wprowadzenia, ponieważ może także być realizowana poprzez akty woli innych organów.",
+    "source_text": "1\nSENSU LARGO\nT. Chauvin, T. Stawecki, P. Winczorek, Wstęp do prawoznawstwa, op. cit., s. 271-272.\nODPOWIEDZIALNOŚĆ PRAWNA\nponoszenie konsekwencji własnych (cudzych) zachowań\nponoszenie następstw zachowań zewnętrznych lub \nwewnętrznych\nponoszenie konsekwencji zachowań w stosunku do innych \nludzi, do Boga, do świata przyrody lub wobec siebie samych\nODPOWIEDZIALNOŚĆ PRAWNA"
+  }
+]
